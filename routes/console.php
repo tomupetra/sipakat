@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\JadwalPelayanan;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 

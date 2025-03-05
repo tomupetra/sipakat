@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'id_tugas',
     ];
 
     /**
@@ -44,5 +45,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    static public function getRecord(){
+        return User::orderBy('id', 'desc')->get();
+    }
+
+    static public function getSingle($id){
+        return self::find($id);
     }
 }
