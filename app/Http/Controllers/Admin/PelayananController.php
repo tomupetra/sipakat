@@ -3,99 +3,99 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Availability; // Import Availability
+use App\Services\ScheduleService;
 use App\Models\JadwalPelayanan;
-use App\Models\User; // Import User
-use Illuminate\Support\Facades\Log; // Import Log facade
-use App\Services\GeneticAlgorithm;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class PelayananController extends Controller
 {
-    public function generateSchedule(Request $request)
+    protected $scheduleService;
+
+    public function __construct(ScheduleService $scheduleService)
     {
-        // 1. Validasi input (opsional, tapi disarankan)
+        $this->scheduleService = $scheduleService;
+    }
+
+    // Metode untuk membuat jadwal
+    public function generateSchedule()
+    {
+        try {
+            // Menggunakan ScheduleService untuk menghasilkan jadwal
+            $this->scheduleService->generateSchedule();
+
+            return redirect()->back()->with('success', 'Jadwal berhasil dibuat!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+
+    public function index()
+    {
+        $jadwals = JadwalPelayanan::whereMonth('date', now()->month)
+            ->orderBy('date')
+            ->get();
+
+        return view('admin.pelayanan.index', compact('jadwals'));
+    }
+
+    public function edit($id)
+    {
+        $jadwal = JadwalPelayanan::findOrFail($id);
+
+        $keyboardists = User::where('id_tugas', 1)->get();  // Pengguna dengan id_tugas = 1 adalah pemusik
+        $songLeaders = User::where('id_tugas', 2)->get();   // Pengguna dengan id_tugas = 2 adalah song leader
+
+        return view('admin.pelayanan.edit', compact('jadwal', 'keyboardists', 'songLeaders'));
+    }
+
+
+    public function update(Request $request, $id)
+    {
+        // Validasi data yang dimasukkan
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'services' => 'required|array', // Pastikan services adalah array. Contoh: ['Pagi', 'Sore']
+            'date' => 'required|date',
+            'jadwal' => 'required|in:07:00,10:00,18:00',
+            'id_pemusik' => 'required|exists:users,id',
+            'id_sl1' => 'required|exists:users,id',
+            'id_sl2' => 'required|exists:users,id',
         ]);
 
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $services = $request->input('services');
+        // Ambil data jadwal yang ingin diperbarui
+        $jadwal = JadwalPelayanan::findOrFail($id);
 
-        // 2. Ambil data ketersediaan dari database
+        // Perbarui data jadwal
+        $jadwal->update([
+            'date' => $request->date,
+            'jadwal' => $request->jadwal,
+            'id_pemusik' => $request->id_pemusik,
+            'id_sl1' => $request->id_sl1,
+            'id_sl2' => $request->id_sl2,
+        ]);
 
-        //  Pemusik (id_tugas = 1)
-        $availableMusicians = Availability::whereBetween('date', [$startDate, $endDate])
-            ->whereHas('user', function ($query) {
-                $query->where('id_tugas', 1);
-            })
-            ->get()
-            ->groupBy('date') // Group by date
-            ->map(function ($availabilities) {
-                return $availabilities->pluck('user_id')->toArray();
-            });
+        // Redirect ke halaman daftar jadwal setelah berhasil update
+        return redirect()->route('admin.jadwal-pelayanan')->with('success', 'Jadwal berhasil diperbarui!');
+    }
 
+    public function destroy($id)
+    {
+        $jadwal = JadwalPelayanan::findOrFail($id);
+        $jadwal->delete();
 
-        //  Song Leader (id_tugas = 2)
-        $availableSongLeaders = Availability::whereBetween('date',  [$startDate, $endDate])
-            ->whereHas('user', function ($query) {
-                $query->where('id_tugas', 2);
-            })
-            ->get()
-            ->groupBy('date') // Group by date
-            ->map(function ($availabilities) {
-                return $availabilities->pluck('user_id')->toArray();
-            });
+        return redirect()->route('admin.jadwal-pelayanan')->with('success', 'Jadwal berhasil dihapus.');
+    }
 
-        // 3. Parameter untuk algoritma genetika
-        $populationSize = 50;
-        $generations = 100;
-        $crossoverRate = 0.8;
-        $mutationRate = 0.2;
+    public function showSchedule()
+    {
+        // Ambil jadwal yang relevan untuk pengguna yang sedang login
+        $jadwals = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2'])
+            ->where('id_pemusik', Auth::id())
+            ->orWhere('id_sl1', Auth::id())
+            ->orWhere('id_sl2', Auth::id())
+            ->get();
 
-        // 4. Inisialisasi dan jalankan algoritma genetika
-        $geneticAlgorithm = new GeneticAlgorithm();
-        $geneticAlgorithm->initialize(
-            $availableMusicians,
-            $availableSongLeaders,
-            $populationSize,
-            $generations,
-            $crossoverRate,
-            $mutationRate,
-            $startDate,
-            $endDate,
-            $services
-        );
-
-        $bestSchedule = $geneticAlgorithm->run();
-
-
-        // 5. Simpan jadwal terbaik ke database
-        // Hapus dulu semua jadwal lama dalam rentang tanggal yang sama (opsional)
-        JadwalPelayanan::whereBetween('date', [$startDate, $endDate])->delete();
-
-        // Simpan jadwal baru
-        foreach ($bestSchedule as $dateService => $assignments) {
-            list($date, $service) = explode(' - ', $dateService);
-            // Pastikan data yang disimpan valid
-            if (isset($assignments['Pemusik'], $assignments['Song Leader 1'])) {
-                JadwalPelayanan::create([
-                    'date' => $date,
-                    'service' =>  $service,
-                    'musician_id' => $assignments['Pemusik'],
-                    'song_leader1_id' => $assignments['Song Leader 1'],
-                    'song_leader2_id' => $assignments['Song Leader 2'] ?? null, //Bisa Kosong
-                    'status' => 0, // Menunggu konfirmasi
-                ]);
-            } else {
-                //Handle error, misalnya log ke file
-                Log::error('Data Penjadwalan Tidak Lengkap', ['bestSchedule' => $bestSchedule]);
-            }
-        }
-
-        return response()->json(['message' => 'Jadwal berhasil dibuat dan disimpan.']);
+        return view('user.schedule', compact('jadwals'));
     }
 }

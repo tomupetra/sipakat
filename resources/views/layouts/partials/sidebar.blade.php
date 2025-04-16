@@ -10,7 +10,7 @@
                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                 Kelola Akun
             </a>
-            <a class="nav-link" href="{{ url('admin/jadwal') }}">
+            <a class="nav-link" href="{{ url('admin/jadwal-pelayanan') }}">
                 <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
                 Jadwal Pelayanan
             </a>

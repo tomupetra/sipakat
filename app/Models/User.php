@@ -47,11 +47,18 @@ class User extends Authenticatable
         ];
     }
 
-    static public function getRecord(){
+    static public function getRecord()
+    {
         return User::orderBy('id', 'desc')->get();
     }
 
-    static public function getSingle($id){
+    static public function getSingle($id)
+    {
         return self::find($id);
+    }
+
+    public function availabilities()
+    {
+        return $this->hasMany(Availability::class);
     }
 }

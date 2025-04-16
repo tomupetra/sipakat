@@ -18,9 +18,12 @@ return new class extends Migration
             $table->foreignId('id_pemusik')->constrained('users')->onDelete('cascade'); // Foreign key ke tabel users
             $table->foreignId('id_sl1')->constrained('users')->onDelete('cascade'); // Foreign key ke tabel users
             $table->foreignId('id_sl2')->constrained('users')->onDelete('cascade'); // Foreign key ke tabel users
-            $table->tinyInteger('status')->default(0); // 0: Menunggu, 1: Diterima, 2: Ditolak
+            $table->tinyInteger('status_pemusik')->default(0); // 0: Menunggu, 1: Diterima, 2: Ditolak
+            $table->tinyInteger('status_sl1')->default(0); // 0: Menunggu, 1: Diterima, 2: Ditolak
+            $table->tinyInteger('status_sl2')->default(0); // 0: Menunggu, 1: Diterima, 2: Ditolak
             $table->timestamp('confirmation_deadline')->nullable(); // Batas waktu konfirmasi
-            $table->boolean('is_confirmed')->default(false); // Status konfirmasi
+            $table->tinyInteger('is_confirmed')->default(0); // 0: Menunggu, 1: Diterima, 2: Ditolak
+            $table->boolean('is_locked')->default(false); // Status konfirmasi pemusik
             $table->timestamps();
         });
     }

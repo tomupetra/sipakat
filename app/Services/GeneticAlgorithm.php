@@ -2,442 +2,363 @@
 
 namespace App\Services;
 
-use App\Models\Availability;
 use App\Models\User;
-use Illuminate\Support\Facades\Log; // Import Log
+use App\Models\Availability;
+use App\Models\JadwalPelayanan;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class GeneticAlgorithm
 {
-    protected $availableMusicians;
-    protected $availableSongLeaders;
-    protected $populationSize;
-    protected $generations;
-    protected $crossoverRate;
-    protected $mutationRate;
-    protected $startDate;
-    protected $endDate;
-    protected $services;
+    private $keyboardists;
+    private $songLeaders;
+    private $weeks;
+    private $sessions = ['07:00', '10:00', '18:00']; // 3 sesi per hari Minggu
+    private $populationSize = 30;
+    private $generations = 100;
 
-    // Method initialize untuk menyimpan parameter
-    public function initialize(
-        $availableMusicians,
-        $availableSongLeaders,
-        $populationSize,
-        $generations,
-        $crossoverRate,
-        $mutationRate,
-        $startDate,
-        $endDate,
-        $services
-    ) {
-        $this->availableMusicians = $availableMusicians;
-        $this->availableSongLeaders = $availableSongLeaders;
-        $this->populationSize = $populationSize;
-        $this->generations = $generations;
-        $this->crossoverRate = $crossoverRate;
-        $this->mutationRate = $mutationRate;
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
-        $this->services = $services;
+    public function __construct()
+    {
+        // Ambil data keyboardist dan song leader dari database
+        $this->keyboardists = User::where('id_tugas', 1)->get();
+        $this->songLeaders = User::where('id_tugas', 2)->get();
+
+        // Menghitung jumlah minggu dalam bulan
+        $firstSundayOfMonth = Carbon::now()->startOfMonth()->next(Carbon::SUNDAY);
+        $this->weeks = $firstSundayOfMonth->copy()->endOfMonth()->diffInWeeks($firstSundayOfMonth) + 1;
     }
 
-    public function run()
+    public function optimizeSchedule()
     {
-        // 1. Inisialisasi populasi
+        $this->validateAvailabilities(); // Validasi data availability sebelum menjalankan algoritma
+
+        if ($this->keyboardists->count() < 3 || $this->songLeaders->count() < 6) {
+            Log::warning('Not enough keyboardists or song leaders available.');
+            return [];  // Menghentikan proses jika data tidak mencukupi
+        }
+
         $population = $this->initializePopulation();
 
-        // 2. Loop hingga kriteria berhenti terpenuhi
         for ($generation = 0; $generation < $this->generations; $generation++) {
-            // a. Evaluasi fitness
-            $this->evaluatePopulation($population);
+            $fitnessScores = $this->calculateFitnessScores($population);
+            $parents = $this->selectParents($population, $fitnessScores);
+            $population = $this->createNewGeneration($parents);
+        }
 
-            // b. Seleksi
-            $selectedParents = $this->selection($population);
+        return $this->getBestSchedule($population);
+    }
 
-            // c. Crossover
-            $offspring = $this->crossover($selectedParents);
+    private function validateAvailabilities()
+    {
+        $firstSundayOfMonth = Carbon::now()->startOfMonth()->next(Carbon::SUNDAY);
+        $weeks = $firstSundayOfMonth->copy()->endOfMonth()->diffInWeeks($firstSundayOfMonth) + 1;
 
-
-            // d. Mutasi
-            $this->mutation($offspring);
-
-            // e. Penggantian populasi
-            $population = $this->replacePopulation($population, $offspring);
-
-
-            // f. Cek konvergensi (opsional)
-            if ($this->hasConverged($population)) {
-                break;
+        foreach ($this->keyboardists as $keyboardist) {
+            foreach (range(1, $weeks) as $week) {
+                $targetDate = $firstSundayOfMonth->copy()->addWeeks($week - 1);
+                if (!$this->isAvailable($keyboardist->id, $week)) {
+                    Log::warning("Keyboardist {$keyboardist->id} tidak tersedia pada minggu ke-$week ($targetDate).");
+                }
             }
         }
 
-        // 3. Kembalikan individu terbaik (jadwal terbaik)
-        usort($population, function ($a, $b) {
-            return $this->calculateFitness($b) <=> $this->calculateFitness($a);
-        }); // Urutkan descending berdasarkan fitness
-
-        return $population[0]; // Jadwal terbaik
+        foreach ($this->songLeaders as $songLeader) {
+            foreach (range(1, $weeks) as $week) {
+                $targetDate = $firstSundayOfMonth->copy()->addWeeks($week - 1);
+                if (!$this->isAvailable($songLeader->id, $week)) {
+                    Log::warning("Song Leader {$songLeader->id} tidak tersedia pada minggu ke-$week ($targetDate).");
+                }
+            }
+        }
     }
-
 
     private function initializePopulation()
     {
         $population = [];
         for ($i = 0; $i < $this->populationSize; $i++) {
-            $population[] = $this->generateRandomSchedule();
+            $schedule = [];
+            $usedUsers = [];  // Untuk melacak user yang sudah ditugaskan dalam satu hari
+            for ($week = 1; $week <= $this->weeks; $week++) {
+                foreach ($this->sessions as $session) {
+                    // Pilih keyboardist dan song leaders berdasarkan availability
+                    $keyboardist = $this->getRandomAvailableKeyboardist($week, $usedUsers);
+                    $songLeaders = $this->getRandomAvailableSongLeaders($week, $usedUsers);
+
+                    // Jika tidak ada yang tersedia, fallback dengan pengguna yang sudah bertugas
+                    if (!$keyboardist || !$songLeaders) {
+                        $keyboardist = $this->getFallbackKeyboardist($week, $usedUsers);
+                        $songLeaders = $this->getFallbackSongLeaders($week, $usedUsers);
+                    }
+
+                    // Jika tetap tidak ada, assign satu user ke lebih dari satu sesi (opsi terakhir)
+                    if (!$keyboardist || !$songLeaders) {
+                        $keyboardist = $this->getAnyKeyboardist($usedUsers);
+                        $songLeaders = $this->getAnySongLeaders($usedUsers);
+                    }
+
+                    if ($keyboardist && $songLeaders) {
+                        $schedule[$week][$session] = [
+                            'keyboardist' => $keyboardist,
+                            'song_leaders' => $songLeaders,
+                        ];
+
+                        // Tambahkan user yang sudah dipilih ke daftar usedUsers
+                        $usedUsers = array_merge($usedUsers, [$keyboardist->id], $songLeaders->pluck('id')->toArray());
+                    }
+                }
+            }
+            $population[] = $schedule;
         }
+
         return $population;
     }
 
-
-
-    private function generateRandomSchedule()
+    private function isAvailable($userId, $week)
     {
-        $schedule = [];
+        // Ambil tanggal Minggu pertama bulan ini
+        $firstSundayOfMonth = Carbon::now()->startOfMonth()->next(Carbon::SUNDAY);
 
-        // Pastikan ada tanggal yang tersedia
-        if (empty($this->availableMusicians) && empty($this->availableSongLeaders)) {
+        // Hitung tanggal untuk minggu yang diminta
+        $targetDate = $firstSundayOfMonth->copy()->addWeeks($week - 1);
 
-            Log::info('Tidak ada Musisi atau SongLeaders yang tersedia.');
-            return []; // Atau throw exception, tergantung kebutuhan
+        // Cek apakah user memiliki availability pada tanggal tersebut
+        return Availability::where('user_id', $userId)
+            ->whereDate('date', $targetDate->toDateString())
+            ->exists();
+    }
+
+    private function getRandomAvailableKeyboardist($week, $usedUsers)
+    {
+        $availableKeyboardists = $this->keyboardists->filter(function ($k) use ($week, $usedUsers) {
+            return $this->isAvailable($k->id, $week) && !in_array($k->id, $usedUsers);
+        });
+
+        if ($availableKeyboardists->isEmpty()) {
+            // Jika tidak ada yang tersedia, cari user yang memiliki tugas paling sedikit
+            $fallbackKeyboardists = $this->keyboardists->filter(function ($k) use ($usedUsers) {
+                return !in_array($k->id, $usedUsers);
+            });
+
+            if ($fallbackKeyboardists->isEmpty()) {
+                return null;
+            }
+
+            return $fallbackKeyboardists->sortBy(function ($k) {
+                return JadwalPelayanan::where('id_pemusik', $k->id)
+                    ->orWhere('id_sl1', $k->id)
+                    ->orWhere('id_sl2', $k->id)
+                    ->count();
+            })->first();
         }
 
-        // Buat jadwal untuk setiap tanggal dalam rentang
-        $currentDate = \Carbon\Carbon::parse($this->startDate);
-        $endDate = \Carbon\Carbon::parse($this->endDate);
+        return $availableKeyboardists->random();
+    }
 
-        while ($currentDate <= $endDate) {
+    private function getRandomAvailableSongLeaders($week, $usedUsers)
+    {
+        $availableSongLeaders = $this->songLeaders->filter(function ($s) use ($week, $usedUsers) {
+            return $this->isAvailable($s->id, $week) && !in_array($s->id, $usedUsers);
+        });
 
-            $dateString = $currentDate->format('Y-m-d');
+        if ($availableSongLeaders->count() < 2) {
+            // Jika tidak ada yang tersedia, cari user yang memiliki tugas paling sedikit
+            $fallbackSongLeaders = $this->songLeaders->filter(function ($s) use ($usedUsers) {
+                return !in_array($s->id, $usedUsers);
+            });
 
-            foreach ($this->services as $service) {
+            if ($fallbackSongLeaders->count() < 2) {
+                return null;
+            }
 
-                $musician = null;
-                $songLeader1 = null;
-                $songLeader2 = null;
+            return $fallbackSongLeaders->sortBy(function ($s) {
+                return JadwalPelayanan::where('id_pemusik', $s->id)
+                    ->orWhere('id_sl1', $s->id)
+                    ->orWhere('id_sl2', $s->id)
+                    ->count();
+            })->take(2);
+        }
 
-                // Cek apakah ada musisi yang tersedia pada tanggal ini
-                if (isset($this->availableMusicians[$dateString]) && !empty($this->availableMusicians[$dateString])) {
-                    $musicianKey = array_rand($this->availableMusicians[$dateString]);
-                    $musician = $this->availableMusicians[$dateString][$musicianKey];
+        return $availableSongLeaders->random(2);
+    }
+
+    private function getFallbackKeyboardist($week, $usedUsers)
+    {
+        // Cari keyboardist yang belum ditugaskan pada hari ini dan bulan ini
+        $fallbackKeyboardists = $this->keyboardists->filter(function ($k) use ($usedUsers) {
+            return !in_array($k->id, $usedUsers) && !JadwalPelayanan::where('id_pemusik', $k->id)
+                ->orWhere('id_sl1', $k->id)
+                ->orWhere('id_sl2', $k->id)
+                ->whereMonth('date', Carbon::now()->month)
+                ->exists();
+        });
+
+        if ($fallbackKeyboardists->isEmpty()) {
+            return null;
+        }
+
+        return $fallbackKeyboardists->random();
+    }
+
+    private function getFallbackSongLeaders($week, $usedUsers)
+    {
+        // Cari song leader yang belum ditugaskan pada hari ini dan bulan ini
+        $fallbackSongLeaders = $this->songLeaders->filter(function ($s) use ($usedUsers) {
+            return !in_array($s->id, $usedUsers) && !JadwalPelayanan::where('id_pemusik', $s->id)
+                ->orWhere('id_sl1', $s->id)
+                ->orWhere('id_sl2', $s->id)
+                ->whereMonth('date', Carbon::now()->month)
+                ->exists();
+        });
+
+        if ($fallbackSongLeaders->count() < 2) {
+            return null;
+        }
+
+        return $fallbackSongLeaders->random(2);
+    }
+
+    private function getAnyKeyboardist($usedUsers)
+    {
+        return $this->keyboardists->filter(function ($k) use ($usedUsers) {
+            return !in_array($k->id, $usedUsers);
+        })->random();
+    }
+
+    private function getAnySongLeaders($usedUsers)
+    {
+        return $this->songLeaders->filter(function ($s) use ($usedUsers) {
+            return !in_array($s->id, $usedUsers);
+        })->random(2);
+    }
+
+    private function calculateFitnessScores($population)
+    {
+        return array_map([$this, 'calculateFitness'], $population);
+    }
+
+    private function calculateFitness($schedule)
+    {
+        $conflicts = 0;
+        $assignments = [];
+        $availabilityViolations = 0;
+
+        foreach ($schedule as $week => $sessions) {
+            $usedUsers = [];
+            foreach ($sessions as $session => $assignees) {
+                $keyboardist = $assignees['keyboardist']->id;
+                $songLeaders = [$assignees['song_leaders'][0]->id, $assignees['song_leaders'][1]->id];
+
+                // Cek konflik dalam satu hari
+                if (in_array($keyboardist, $usedUsers) || array_intersect($songLeaders, $usedUsers)) {
+                    $conflicts++;
                 }
+                $usedUsers = array_merge($usedUsers, [$keyboardist], $songLeaders);
 
-                // Cek apakah ada song leader yang tersedia pada tanggal ini
-                if (isset($this->availableSongLeaders[$dateString]) && !empty($this->availableSongLeaders[$dateString])) {
-                    // Pilih 2 song leader secara acak (pastikan tidak sama)
-                    $availableSLs = $this->availableSongLeaders[$dateString];
-                    if (count($availableSLs) >= 2) {
-                        $songLeaderKeys = array_rand($availableSLs, 2);
-                        $songLeader1 = $availableSLs[$songLeaderKeys[0]];
-                        $songLeader2 = $availableSLs[$songLeaderKeys[1]];
-                    } elseif (count($availableSLs) == 1) {
-                        $songLeader1  = $availableSLs[array_rand($availableSLs)];
-                        $songLeader2 = null; //Tidak Ada Cukup Song Leader
+                // Cek availability
+                if (!$this->isAvailable($keyboardist, $week)) {
+                    $availabilityViolations++;
+                }
+                foreach ($songLeaders as $leader) {
+                    if (!$this->isAvailable($leader, $week)) {
+                        $availabilityViolations++;
                     }
                 }
 
-                // Jika ada pemusik dan song leader yang tersedia, tambahkan ke jadwal
-                if ($musician !== null && $songLeader1 !== null) {
-                    $schedule["$dateString - Ibadah $service"] = [
-                        'Pemusik' => $musician,
-                        'Song Leader 1' => $songLeader1,
-                        'Song Leader 2' => $songLeader2,
-                    ];
-                } else {
-                    // Log jika tidak ada cukup personil
-                    Log::info('Tidak cukup personil untuk tanggal dan layanan ini.', [
-                        'tanggal' => $dateString,
-                        'layanan' => $service,
-                        'musisi' => $musician,
-                        'song_leader_1' => $songLeader1,
-                        'song_leader_2' => $songLeader2
-                    ]);
+                // Hitung jumlah tugas per pengguna
+                $assignments[$keyboardist] = ($assignments[$keyboardist] ?? 0) + 1;
+                foreach ($songLeaders as $leader) {
+                    $assignments[$leader] = ($assignments[$leader] ?? 0) + 1;
                 }
             }
-            $currentDate->addDay(); // Lanjut ke hari berikutnya
+        }
+
+        // Hitung variance distribusi tugas
+        $variance = $this->calculateVariance($assignments);
+
+        // Fitness adalah kebalikan dari konflik, pelanggaran availability, dan variance
+        return 1 / (1 + $conflicts + (5 * $availabilityViolations) + $variance); // Kurangi bobot availabilityViolations
+    }
+
+    private function calculateVariance($assignments)
+    {
+        if (empty($assignments)) {
+            return 0;
+        }
+
+        $mean = array_sum($assignments) / count($assignments);
+        $variance = 0;
+        foreach ($assignments as $count) {
+            $variance += pow($count - $mean, 2);
+        }
+        return $variance / count($assignments);
+    }
+
+    private function selectParents($population, $fitnessScores)
+    {
+        $totalFitness = array_sum($fitnessScores);
+
+        // Jika total fitness adalah 0, berikan probabilitas yang sama untuk semua individu
+        if ($totalFitness == 0) {
+            return $population;
+        }
+
+        $probabilities = array_map(function ($score) use ($totalFitness) {
+            return $score / $totalFitness;
+        }, $fitnessScores);
+
+        $parents = [];
+        for ($i = 0; $i < $this->populationSize; $i++) {
+            $rand = mt_rand() / mt_getrandmax();
+            $cumulativeProbability = 0;
+            foreach ($population as $index => $individual) {
+                $cumulativeProbability += $probabilities[$index];
+                if ($rand <= $cumulativeProbability) {
+                    $parents[] = $individual;
+                    break;
+                }
+            }
+        }
+        return $parents;
+    }
+
+    private function createNewGeneration($parents)
+    {
+        $newPopulation = [];
+        for ($i = 0; $i < $this->populationSize; $i++) {
+            $parent1 = $parents[array_rand($parents)];
+            $parent2 = $parents[array_rand($parents)];
+            $child = $this->crossover($parent1, $parent2);
+            $newPopulation[] = $this->mutate($child);
+        }
+        return $newPopulation;
+    }
+
+    private function crossover($parent1, $parent2)
+    {
+        $child = [];
+        foreach ($parent1 as $week => $sessions) {
+            $child[$week] = (rand(0, 1) == 0) ? $sessions : $parent2[$week];
+        }
+        return $child;
+    }
+
+    private function mutate($schedule)
+    {
+        foreach ($schedule as $week => &$sessions) {
+            foreach ($sessions as $session => &$assignees) {
+                if (rand(0, 100) < 5) { // 5% mutation rate
+                    $assignees['keyboardist'] = $this->getRandomAvailableKeyboardist($week, []);
+                    $assignees['song_leaders'] = $this->getRandomAvailableSongLeaders($week, []);
+                }
+            }
         }
         return $schedule;
     }
 
-
-
-    private function evaluatePopulation(&$population)
+    private function getBestSchedule($population)
     {
-
-        foreach ($population as &$individual) {
-            $individual['fitness'] = $this->calculateFitness($individual);
-        }
-    }
-
-
-
-    //  Fungsi fitness
-    private function calculateFitness($schedule)
-    {
-
-        $fitness = 0;
-        $assigned = []; // Array untuk melacak tugas yang sudah diberikan pada hari yang sama.
-
-        // Cek apakah schedule kosong
-        if (empty($schedule)) {
-            return 0; // Fitness 0 jika jadwal kosong
-        }
-
-
-        foreach ($schedule as $dateService => $personnel) {
-            list($date, $service) = explode(' - ', $dateService, 2);
-
-            // Periksa duplikasi dalam satu hari
-            foreach (['Pemusik', 'Song Leader 1', 'Song Leader 2'] as $role) {
-                if (isset($personnel[$role])) {
-                    $personId = $personnel[$role];
-                    if (!isset($assigned[$date])) {
-                        $assigned[$date] = [];
-                    }
-                    if (in_array($personId, $assigned[$date])) {
-                        // Penalty jika orang yang sama ditugaskan lebih dari sekali dalam sehari
-                        $fitness -= 30;
-                    } else {
-                        $assigned[$date][] = $personId;
-                    }
-                }
-            }
-
-            $fitness += 20; // Tambah fitness jika penjadwalan berhasil
-        }
-
-
-        return $fitness;
-    }
-
-
-    private function selection($population)
-    {
-        //  Roulette Wheel Selection + Elitism
-
-        $elitismCount = max(1, round(0.1 * count($population))); //minimal 1, 10% dari total populasi.
-        $newPopulation = [];
-
-        // Elitism: Simpan individu terbaik langsung
-        usort($population, function ($a, $b) {
-            return $this->calculateFitness($b) <=> $this->calculateFitness($a);
-        });
-        for ($i = 0; $i < $elitismCount; $i++) {
-            $newPopulation[] = $population[$i];
-        }
-
-        // Hitung total fitness
-        $fitnessSum = 0;
-
-        foreach ($population as $individual) {
-            $fitnessSum += $individual['fitness'];
-        }
-
-
-        // Roulette wheel selection
-        while (count($newPopulation) < count($population)) {
-            $randomValue = mt_rand() / mt_getrandmax(); // Angka acak antara 0 dan 1
-
-            //Jika fitnessSum <= 0, beri peluang yang sama untuk semua individu
-            if ($fitnessSum <= 0) {
-                $probabilityThreshold = 1 / count($population);
-            } else {
-                $probabilityThreshold = 0;
-                for ($i = 0; $i < count($population); $i++) {
-                    $probabilityThreshold += ($population[$i]['fitness'] / $fitnessSum); // Menghitung probability
-                    if ($randomValue <= $probabilityThreshold) {
-                        $newPopulation[] = $population[$i]; //Memilih Individu
-                        break; //Keluar dari loop, setelah individu dipilih
-                    }
-                }
-            }
-        }
-
-        return $newPopulation;
-    }
-
-
-
-    private function crossover($population)
-    {
-        // Elitism: Lewati individu terbaik
-        $elitismCount = max(1, round(0.1 * count($population))); // 10% populasi, minimal 1.
-        $offspring = [];
-
-        // Salin individu elit ke offspring (tidak di-crossover)
-        for ($i = 0; $i < $elitismCount; $i++) {
-            $offspring[] = $population[$i];
-        }
-
-        // One-point crossover untuk sisa populasi
-        while (count($offspring) < count($population)) {
-            // Pilih 2 parent secara acak (pastikan tidak sama)
-            if (count($population) < 2) {
-                //Tidak Cukup parent untuk melakukan crossover
-                break;
-            }
-
-            //Pilih dua induk acak yang berbeda
-            do {
-                $parent1Index = array_rand($population);
-                $parent2Index = array_rand($population);
-            } while ($parent1Index === $parent2Index);  //Pastikan index parent tidak sama
-
-            $parent1 = $population[$parent1Index];
-            $parent2 = $population[$parent2Index];
-
-            // Lakukan crossover jika memenuhi crossover rate
-            if ((mt_rand() / mt_getrandmax()) < $this->crossoverRate) {
-
-                // One-point crossover
-                $keys1 = array_keys($parent1);
-                $keys2 = array_keys($parent2);
-
-                // Hapus kunci 'fitness' jika ada, agar tidak ikut di-crossover
-                $keys1 = array_diff($keys1, ['fitness']);
-                $keys2 = array_diff($keys2, ['fitness']);
-
-                if (!empty($keys1) && !empty($keys2)) { // Cek array key kosong atau tidak
-                    $crossoverPoint = mt_rand(0, min(count($keys1), count($keys2)) - 1);
-
-
-                    $child1 = [];
-                    $child2 = [];
-
-
-                    // Ambil data dari parent1 sampai titik crossover
-                    for ($i = 0; $i <= $crossoverPoint; $i++) {
-                        if (isset($keys1[$i])) {
-                            $child1[$keys1[$i]] = $parent1[$keys1[$i]];
-                        }
-                    }
-
-                    // Ambil data dari parent2 setelah titik crossover, jika tidak ada (Prioritas Parent 1)
-                    for ($i = $crossoverPoint + 1; $i < count($keys2); $i++) {
-
-                        //Periksa apakah kunci dari parent2 sudah ada pada child1
-                        if (isset($keys2[$i]) && !isset($child1[$keys2[$i]])) {
-                            $child1[$keys2[$i]] = $parent2[$keys2[$i]];
-                        }
-                    }
-
-                    // Ambil data dari parent2 sampai titik crossover
-                    for ($i = 0; $i <= $crossoverPoint; $i++) {
-                        if (isset($keys2[$i])) {
-                            $child2[$keys2[$i]] = $parent2[$keys2[$i]];
-                        }
-                    }
-
-                    // Ambil data dari parent1 setelah titik crossover, jika tidak ada (Prioritas Parent 2)
-                    for ($i = $crossoverPoint + 1; $i < count($keys1); $i++) {
-
-                        if (isset($keys1[$i]) && !isset($child2[$keys1[$i]])) {
-                            $child2[$keys1[$i]] = $parent1[$keys1[$i]];
-                        }
-                    }
-
-                    $offspring[] = $child1;
-                    if (count($offspring) < count($population)) {
-                        $offspring[] = $child2;
-                    }
-                } else {
-                    //Tidak dapat melakukan crossover karena salah satu orang tua tidak memiliki jadwal
-                    $offspring[] = $parent1;
-                    $offspring[] = $parent2;
-                }
-            } else {
-                // Jika tidak crossover, masukkan parent ke offspring
-                $offspring[] = $parent1;
-                if (count($offspring) < count($population)) {
-                    $offspring[] = $parent2;
-                }
-            }
-        }
-        return $offspring;
-    }
-
-
-
-    private function mutation(&$population)
-    {
-
-        foreach ($population as &$child) {
-            //Lewati jika child adalah array kosong
-            if (empty($child)) {
-                continue;
-            }
-
-            if ((mt_rand() / mt_getrandmax()) < $this->mutationRate) {
-                //  Swap mutation (tukar 2 jadwal acak)
-                $keys = array_keys($child);
-                // Hapus kunci 'fitness' jika ada, agar tidak ikut di-mutasi
-                $keys = array_diff($keys, ['fitness']);
-
-                if (count($keys) > 1) { //Memastikan ada cukup jadwal untuk swap
-                    $mutationPoint1 = array_rand($keys);
-                    do {
-                        $mutationPoint2 = array_rand($keys);
-                    } while ($mutationPoint1 == $mutationPoint2);  //Pastikan 2 index tidak sama
-
-                    // Swap jadwal
-                    $temp = $child[$keys[$mutationPoint1]];
-                    $child[$keys[$mutationPoint1]] = $child[$keys[$mutationPoint2]];
-                    $child[$keys[$mutationPoint2]] = $temp;
-                }
-
-                //  Random resetting (ganti petugas dengan yang available, acak)
-                $randomKey = array_rand($child); // Pilih jadwal secara acak
-                list($date, $service) = explode(' - ', $randomKey, 2);
-                $date = trim($date);
-                $service = trim($service);
-
-                // Ambil petugas yang available di tanggal dan service tersebut (Pemusik)
-                if (isset($this->availableMusicians[$date]) && !empty($this->availableMusicians[$date])) {
-
-                    $musicianKey = array_rand($this->availableMusicians[$date]);
-                    $newMusician = $this->availableMusicians[$date][$musicianKey];
-                    $child[$randomKey]['Pemusik'] = $newMusician;
-                }
-
-                // Ambil petugas yang available di tanggal dan service tersebut (Song Leader)
-                if (isset($this->availableSongLeaders[$date]) && !empty($this->availableSongLeaders[$date])) {
-                    $availableSLs = $this->availableSongLeaders[$date];
-                    if (count($availableSLs) >= 2) {
-                        $songLeaderKeys = array_rand($availableSLs, 2);
-                        $child[$randomKey]['Song Leader 1'] = $availableSLs[$songLeaderKeys[0]];
-                        $child[$randomKey]['Song Leader 2'] = $availableSLs[$songLeaderKeys[1]];
-                    } elseif (count($availableSLs) == 1) {
-                        $child[$randomKey]['Song Leader 1']  = $availableSLs[array_rand($availableSLs)];
-                        $child[$randomKey]['Song Leader 2'] = null; //Tidak Ada Cukup Song Leader
-                    }
-                }
-            }
-        }
-    }
-
-    private function replacePopulation($population, $offspring)
-    {
-        // Implementasi penggantian populasi (misalnya, generational replacement)
-        // Generational replacement: Ganti seluruh populasi dengan offspring
-        return $offspring;
-    }
-
-
-    private function hasConverged($population)
-    {
-        // Implementasi pengecekan konvergensi (opsional)
-        // Cek konvergensi sederhana: Jika semua individu memiliki fitness yang sama
-        if (empty($population)) {
-            return false; // Populasi kosong, belum konvergen
-        }
-
-        $firstFitness = $population[0]['fitness'];
-        foreach ($population as $individual) {
-            if ($individual['fitness'] != $firstFitness) {
-                return false; // Ada yang berbeda, belum konvergen
-            }
-        }
-
-        return true; // Semua sama, dianggap konvergen
+        $fitnessScores = $this->calculateFitnessScores($population);
+        $bestIndex = array_search(max($fitnessScores), $fitnessScores);
+        return $population[$bestIndex];
     }
 }

@@ -8,9 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class JadwalPelayanan extends Model
 {
     use HasFactory;
-
+    protected $table = 'jadwal_pelayanan';
     protected $fillable = [
-        'date', 'jadwal', 'id_pemusik', 'id_sl1', 'id_sl2', 'status'
+        'date',
+        'jadwal',
+        'id_pemusik',
+        'id_sl1',
+        'id_sl2',
+        'status_pemusik',
+        'status_sl1',
+        'status_sl2',
+        'is_confirmed',
+        'is_locked',
+        'confirmation_deadline',
     ];
 
     // Relasi ke tabel users (pemusik)

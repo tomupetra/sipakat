@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\JadwalController;
 use App\Http\Controllers\Admin\ValidasiRuangController;
 use App\Http\Controllers\Admin\PelayananController;
+use App\Http\Controllers\User\KonfirmasiJadwalController;
 
 use App\Http\Controllers\User\JadwalPelayananController;
 use App\Http\Controllers\User\PinjamRuanganController;
@@ -48,6 +49,9 @@ Route::middleware(['auth', 'userMiddleware'])->group(function () {
 
     Route::get('/user/jadwal-pelayanan', [JadwalPelayananController::class, 'index'])->name('user.jadwal-pelayanan'); //Availabilities
     Route::post('/user/jadwal-pelayanan', [JadwalPelayananController::class, 'store'])->name('user.store.jadwal-pelayanan'); //Availabilities
+
+    Route::post('/jadwal/{id}/confirm', [KonfirmasiJadwalController::class, 'confirmSchedule'])->name('user.confirm-schedule');
+    Route::post('/jadwal/{id}/reject', [KonfirmasiJadwalController::class, 'rejectSchedule'])->name('user.reject-schedule');
 });
 
 
@@ -107,5 +111,9 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::post('/admin/pinjam-ruangan/{booking}/status', [ValidasiRuangController::class, 'updateStatus'])->name('admin.bookings.updateStatus');
 
     // Route Generate Jadwal Pelayanan
-    Route::get('/admin/generate-schedule', [PelayananController::class, 'generateSchedule']);
+    Route::get('/admin/jadwal-pelayanan', [PelayananController::class, 'index'])->name('admin.jadwal-pelayanan');
+    Route::get('/admin/generate-schedule', [PelayananController::class, 'generateSchedule'])->name('admin.generate-schedule');
+    Route::get('/admin/jadwal/{id}/edit', [PelayananController::class, 'edit'])->name('admin.edit-jadwal');
+    Route::put('/admin/jadwal/{id}', [PelayananController::class, 'update'])->name('admin.update-jadwal');  // Menggunakan PUT untuk update
+    Route::delete('/admin/jadwal/{id}', [PelayananController::class, 'destroy'])->name('admin.delete-jadwal');
 });

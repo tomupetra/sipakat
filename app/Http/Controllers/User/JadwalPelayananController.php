@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Availability;
+use App\Models\JadwalPelayanan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -14,7 +15,12 @@ class JadwalPelayananController extends Controller
     {
         $userId = Auth::id();
         $availabilities = Availability::where('user_id', $userId)->pluck('date');
-        return view('user.jadwal-pelayanan.index', compact('availabilities'));
+        $jadwals = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2'])
+            ->where('id_pemusik', Auth::id())
+            ->orWhere('id_sl1', Auth::id())
+            ->orWhere('id_sl2', Auth::id())
+            ->get();
+        return view('user.jadwal-pelayanan.index', compact('availabilities', 'jadwals'));
     }
 
     public function store(Request $request)
