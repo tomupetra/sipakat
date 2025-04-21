@@ -31,7 +31,6 @@ class PelayananController extends Controller
         }
     }
 
-
     public function index()
     {
         $jadwals = JadwalPelayanan::whereMonth('date', now()->month)
@@ -40,6 +39,39 @@ class PelayananController extends Controller
 
         return view('admin.pelayanan.index', compact('jadwals'));
     }
+
+    // public function laporan(Request $request)
+    // {
+    //     $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
+
+    //     // Filter berdasarkan bulan
+    //     if ($request->filled('bulan')) {
+    //         [$year, $month] = explode('-', $request->bulan);
+    //         $query->whereYear('date', $year)->whereMonth('date', $month);
+    //     }
+
+    //     // Search berdasarkan nama atau sesi
+    //     if ($request->filled('search')) {
+    //         $search = $request->search;
+
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('jadwal', 'like', '%' . $search . '%')
+    //                 ->orWhereHas('pemusik', function ($q) use ($search) {
+    //                     $q->where('name', 'like', '%' . $search . '%');
+    //                 })
+    //                 ->orWhereHas('songLeader1', function ($q) use ($search) {
+    //                     $q->where('name', 'like', '%' . $search . '%');
+    //                 })
+    //                 ->orWhereHas('songLeader2', function ($q) use ($search) {
+    //                     $q->where('name', 'like', '%' . $search . '%');
+    //                 });
+    //         });
+    //     }
+
+    //     $jadwals = $query->orderBy('date', 'asc')->paginate(10)->withQueryString();
+
+    //     return view('admin.pelayanan.laporan', compact('jadwals'));
+    // }
 
     public function edit($id)
     {

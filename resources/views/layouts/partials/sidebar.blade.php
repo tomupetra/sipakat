@@ -10,10 +10,21 @@
                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                 Kelola Akun
             </a>
-            <a class="nav-link" href="{{ url('admin/jadwal-pelayanan') }}">
-                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                Jadwal Pelayanan
-            </a>
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                    data-bs-target="#collapsePelayanan" aria-expanded="false" aria-controls="collapsePelayanan">
+                    <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
+                    Jadwal Pelayanan
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapsePelayanan" aria-labelledby="headingOne"
+                    data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="{{ url('admin/jadwal-pelayanan') }}">Jadwal Pelayanan</a>
+                        <a class="nav-link" href="{{ url('admin/laporan-pelayanan') }}">Riwayat Pelayanan</a>
+                    </nav>
+                </div>
+            </li>
             <div class="sb-sidenav-menu-heading">Landing Page</div>
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLanding"
                 aria-expanded="false" aria-controls="collapseLanding">

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\JadwalPelayanan;
 use App\Models\LaporanPelayanan;
 use Carbon\Carbon;
+use App\Models\HistoryJadwalPelayanan;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class KonfirmasiJadwalController extends Controller
 {
@@ -142,6 +144,7 @@ class KonfirmasiJadwalController extends Controller
             ]);
 
             $this->saveToLaporan($jadwal); // Simpan ke laporan pelayanan
+            $this->saveToHistory($jadwal); // Simpan ke history
         }
         // Cek jika masih menunggu konfirmasi
         else {
@@ -149,6 +152,54 @@ class KonfirmasiJadwalController extends Controller
                 'is_confirmed' => 0,
             ]);
         }
+    }
+
+    public function getLaporan(Request $request)
+    {
+        $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
+
+        // Filter berdasarkan tanggal jika diberikan
+        if ($request->filled('tanggal')) {
+            $tanggal = Carbon::parse($request->tanggal);
+            $query->where(function ($q) use ($tanggal) {
+                $q->where('date', '<', $tanggal)
+                    ->orWhere('is_confirmed', 1);
+            });
+        } else {
+            // Default: tanggal hari ini
+            $query->where(function ($q) {
+                $q->where('date', '<', Carbon::today())
+                    ->orWhere('is_confirmed', 1);
+            });
+        }
+
+        // Filter berdasarkan bulan (format: YYYY-MM)
+        if ($request->filled('bulan')) {
+            [$year, $month] = explode('-', $request->bulan);
+            $query->whereYear('date', $year)->whereMonth('date', $month);
+        }
+
+        // Pencarian berdasarkan nama atau sesi
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('jadwal', 'like', '%' . $search . '%')
+                    ->orWhereHas('pemusik', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('songLeader1', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('songLeader2', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $laporan = $query->orderBy('date', 'desc')->paginate(15)->withQueryString();
+
+        return view('admin.pelayanan.laporan', compact('laporan'));
     }
 
     // Fungsi untuk menyimpan laporan saat jadwal terkunci
@@ -163,5 +214,66 @@ class KonfirmasiJadwalController extends Controller
             'is_confirmed' => $jadwal->is_confirmed,
             'is_locked' => $jadwal->is_locked,
         ]);
+    }
+
+    private function saveToHistory($jadwal)
+    {
+        HistoryJadwalPelayanan::create([
+            'jadwal_pelayanan_id' => $jadwal->id,
+            'date' => $jadwal->date,
+            'jadwal' => $jadwal->jadwal,
+            'id_pemusik' => $jadwal->id_pemusik,
+            'id_sl1' => $jadwal->id_sl1,
+            'id_sl2' => $jadwal->id_sl2,
+            'is_confirmed' => $jadwal->is_confirmed,
+            'is_locked' => $jadwal->is_locked,
+        ]);
+    }
+
+    protected function getFilteredLaporan(Request $request)
+    {
+        $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
+
+        if ($request->filled('tanggal')) {
+            $tanggal = \Carbon\Carbon::parse($request->tanggal);
+            $query->where(function ($q) use ($tanggal) {
+                $q->where('date', '<', $tanggal)
+                    ->orWhere('is_confirmed', 1);
+            });
+        } else {
+            $query->where(function ($q) {
+                $q->where('date', '<', \Carbon\Carbon::today())
+                    ->orWhere('is_confirmed', 1);
+            });
+        }
+
+        if ($request->filled('bulan')) {
+            [$year, $month] = explode('-', $request->bulan);
+            $query->whereYear('date', $year)->whereMonth('date', $month);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('jadwal', 'like', '%' . $search . '%')
+                    ->orWhereHas('pemusik', fn($q) => $q->where('name', 'like', "%$search%"))
+                    ->orWhereHas('songLeader1', fn($q) => $q->where('name', 'like', "%$search%"))
+                    ->orWhereHas('songLeader2', fn($q) => $q->where('name', 'like', "%$search%"));
+            });
+        }
+
+        return $query->orderBy('date', 'desc');
+    }
+
+
+    public function exportPdf(Request $request)
+    {
+        $laporan = $this->getFilteredLaporan($request)->get();
+
+        $pdf = PDF::loadView('admin.pelayanan.laporan_pdf', compact('laporan'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('laporan_pelayanan.pdf');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\HistoryJadwalPelayanan;
 
 class JadwalPelayanan extends Model
 {
@@ -39,5 +40,11 @@ class JadwalPelayanan extends Model
     public function songLeader2()
     {
         return $this->belongsTo(User::class, 'id_sl2');
+    }
+
+    // Relasi ke tabel history_jadwal_pelayanan
+    public function history()
+    {
+        return $this->hasMany(HistoryJadwalPelayanan::class);
     }
 }

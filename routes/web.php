@@ -116,4 +116,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/jadwal/{id}/edit', [PelayananController::class, 'edit'])->name('admin.edit-jadwal');
     Route::put('/admin/jadwal/{id}', [PelayananController::class, 'update'])->name('admin.update-jadwal');  // Menggunakan PUT untuk update
     Route::delete('/admin/jadwal/{id}', [PelayananController::class, 'destroy'])->name('admin.delete-jadwal');
+
+    Route::get('/admin/laporan-pelayanan', [KonfirmasiJadwalController::class, 'getLaporan'])->name('laporan.pelayanan');
+    Route::get('/admin/laporan-pelayanan/export-pdf', [KonfirmasiJadwalController::class, 'exportPDF'])->name('laporan.exportPDF');
 });
