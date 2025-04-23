@@ -10,6 +10,7 @@ use App\Models\LaporanPelayanan;
 use Carbon\Carbon;
 use App\Models\HistoryJadwalPelayanan;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\User;
 
 class KonfirmasiJadwalController extends Controller
 {
@@ -85,10 +86,10 @@ class KonfirmasiJadwalController extends Controller
                     'status_pemusik' => 2, // Status untuk pemusik (Ditolak)
                 ]);
 
-                // Periksa status konfirmasi keseluruhan
-                $this->updateOverallConfirmationStatus($jadwal);
+                // Ganti pemusik dengan yang lain
+                $this->replaceMusician($jadwal);
 
-                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak sebagai pemusik!');
+                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak dan pemusik diganti!');
             }
 
             return redirect()->route('user.jadwal-pelayanan')->with('error', 'Batas waktu konfirmasi telah lewat.');
@@ -100,10 +101,10 @@ class KonfirmasiJadwalController extends Controller
                     'status_sl1' => 2, // Status untuk SL1 (Ditolak)
                 ]);
 
-                // Periksa status konfirmasi keseluruhan
-                $this->updateOverallConfirmationStatus($jadwal);
+                // Ganti Song Leader 1 dengan yang lain
+                $this->replaceSongLeader1($jadwal);
 
-                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak sebagai Song Leader 1!');
+                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak dan Song Leader 1 diganti!');
             }
 
             return redirect()->route('user.jadwal-pelayanan')->with('error', 'Batas waktu konfirmasi telah lewat.');
@@ -115,16 +116,82 @@ class KonfirmasiJadwalController extends Controller
                     'status_sl2' => 2, // Status untuk SL2 (Ditolak)
                 ]);
 
-                // Periksa status konfirmasi keseluruhan
-                $this->updateOverallConfirmationStatus($jadwal);
+                // Ganti Song Leader 2 dengan yang lain
+                $this->replaceSongLeader2($jadwal);
 
-                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak sebagai Song Leader 2!');
+                return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil ditolak dan Song Leader 2 diganti!');
             }
 
             return redirect()->route('user.jadwal-pelayanan')->with('error', 'Batas waktu konfirmasi telah lewat.');
         }
 
         return redirect()->route('user.jadwal-pelayanan')->with('error', 'Anda tidak dapat menolak jadwal ini.');
+    }
+
+    private function replaceMusician($jadwal)
+    {
+        $availableMusicians = User::where('id_tugas', 1)
+            ->where('id', '!=', $jadwal->id_pemusik)
+            ->whereHas('availabilities', function ($query) use ($jadwal) {
+                $query->where('date', $jadwal->date);
+            })
+            ->get();
+
+        if ($availableMusicians->isEmpty()) {
+            // Jika tidak ada yang tersedia, pilih secara acak dari semua pemusik
+            $availableMusicians = User::where('id_tugas', 1)
+                ->where('id', '!=', $jadwal->id_pemusik)
+                ->get();
+        }
+
+        if ($availableMusicians->isNotEmpty()) {
+            $newMusician = $availableMusicians->random();
+            $jadwal->update(['id_pemusik' => $newMusician->id]);
+        }
+    }
+
+    private function replaceSongLeader1($jadwal)
+    {
+        $availableSongLeaders = User::where('id_tugas', 2)
+            ->where('id', '!=', $jadwal->id_sl1)
+            ->whereHas('availabilities', function ($query) use ($jadwal) {
+                $query->where('date', $jadwal->date);
+            })
+            ->get();
+
+        if ($availableSongLeaders->isEmpty()) {
+            // Jika tidak ada yang tersedia, pilih secara acak dari semua song leader
+            $availableSongLeaders = User::where('id_tugas', 2)
+                ->where('id', '!=', $jadwal->id_sl1)
+                ->get();
+        }
+
+        if ($availableSongLeaders->isNotEmpty()) {
+            $newSongLeader1 = $availableSongLeaders->random();
+            $jadwal->update(['id_sl1' => $newSongLeader1->id]);
+        }
+    }
+
+    private function replaceSongLeader2($jadwal)
+    {
+        $availableSongLeaders = User::where('id_tugas', 2)
+            ->where('id', '!=', $jadwal->id_sl2)
+            ->whereHas('availabilities', function ($query) use ($jadwal) {
+                $query->where('date', $jadwal->date);
+            })
+            ->get();
+
+        if ($availableSongLeaders->isEmpty()) {
+            // Jika tidak ada yang tersedia, pilih secara acak dari semua song leader
+            $availableSongLeaders = User::where('id_tugas', 2)
+                ->where('id', '!=', $jadwal->id_sl2)
+                ->get();
+        }
+
+        if ($availableSongLeaders->isNotEmpty()) {
+            $newSongLeader2 = $availableSongLeaders->random();
+            $jadwal->update(['id_sl2' => $newSongLeader2->id]);
+        }
     }
 
     // Fungsi untuk memeriksa dan memperbarui status keseluruhan konfirmasi
@@ -216,18 +283,27 @@ class KonfirmasiJadwalController extends Controller
         ]);
     }
 
-    private function saveToHistory($jadwal)
+    public function saveToHistory()
     {
-        HistoryJadwalPelayanan::create([
-            'jadwal_pelayanan_id' => $jadwal->id,
-            'date' => $jadwal->date,
-            'jadwal' => $jadwal->jadwal,
-            'id_pemusik' => $jadwal->id_pemusik,
-            'id_sl1' => $jadwal->id_sl1,
-            'id_sl2' => $jadwal->id_sl2,
-            'is_confirmed' => $jadwal->is_confirmed,
-            'is_locked' => $jadwal->is_locked,
-        ]);
+        $jadwals = JadwalPelayanan::where('date', '<', Carbon::today())
+            ->where('is_confirmed', 1)
+            ->get();
+
+        foreach ($jadwals as $jadwal) {
+            HistoryJadwalPelayanan::create([
+                'jadwal_pelayanan_id' => $jadwal->id,
+                'date' => $jadwal->date,
+                'jadwal' => $jadwal->jadwal,
+                'id_pemusik' => $jadwal->id_pemusik,
+                'id_sl1' => $jadwal->id_sl1,
+                'id_sl2' => $jadwal->id_sl2,
+                'is_confirmed' => $jadwal->is_confirmed,
+                'is_locked' => $jadwal->is_locked,
+            ]);
+
+            // Optionally, delete or mark the original schedule as archived
+            // $jadwal->delete();
+        }
     }
 
     protected function getFilteredLaporan(Request $request)
@@ -275,5 +351,32 @@ class KonfirmasiJadwalController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('laporan_pelayanan.pdf');
+    }
+
+    public function updateSchedule(Request $request, $id)
+    {
+        $jadwal = JadwalPelayanan::findOrFail($id);
+
+        if (!$jadwal->canBeModified()) {
+            return redirect()->back()->with('error', 'Jadwal tidak dapat diubah.');
+        }
+
+        // Lakukan update jadwal di sini
+        // $jadwal->update([...]);
+
+        return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil diubah.');
+    }
+
+    public function deleteSchedule($id)
+    {
+        $jadwal = JadwalPelayanan::findOrFail($id);
+
+        if (!$jadwal->canBeModified()) {
+            return redirect()->back()->with('error', 'Jadwal tidak dapat dihapus.');
+        }
+
+        $jadwal->delete();
+
+        return redirect()->route('user.jadwal-pelayanan')->with('success', 'Jadwal berhasil dihapus.');
     }
 }

@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Services\ScheduleService;
 use App\Models\JadwalPelayanan;
 use App\Models\User;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PelayananController extends Controller
 {
@@ -24,6 +26,7 @@ class PelayananController extends Controller
         try {
             // Menggunakan ScheduleService untuk menghasilkan jadwal
             $this->scheduleService->generateSchedule();
+            $this->scheduleService->confirmOverdueSchedules();
 
             return redirect()->back()->with('success', 'Jadwal berhasil dibuat!');
         } catch (\Exception $e) {
@@ -33,45 +36,18 @@ class PelayananController extends Controller
 
     public function index()
     {
-        $jadwals = JadwalPelayanan::whereMonth('date', now()->month)
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+
+        $jadwals = JadwalPelayanan::whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
             ->orderBy('date')
             ->get();
 
         return view('admin.pelayanan.index', compact('jadwals'));
     }
 
-    // public function laporan(Request $request)
-    // {
-    //     $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
 
-    //     // Filter berdasarkan bulan
-    //     if ($request->filled('bulan')) {
-    //         [$year, $month] = explode('-', $request->bulan);
-    //         $query->whereYear('date', $year)->whereMonth('date', $month);
-    //     }
-
-    //     // Search berdasarkan nama atau sesi
-    //     if ($request->filled('search')) {
-    //         $search = $request->search;
-
-    //         $query->where(function ($q) use ($search) {
-    //             $q->where('jadwal', 'like', '%' . $search . '%')
-    //                 ->orWhereHas('pemusik', function ($q) use ($search) {
-    //                     $q->where('name', 'like', '%' . $search . '%');
-    //                 })
-    //                 ->orWhereHas('songLeader1', function ($q) use ($search) {
-    //                     $q->where('name', 'like', '%' . $search . '%');
-    //                 })
-    //                 ->orWhereHas('songLeader2', function ($q) use ($search) {
-    //                     $q->where('name', 'like', '%' . $search . '%');
-    //                 });
-    //         });
-    //     }
-
-    //     $jadwals = $query->orderBy('date', 'asc')->paginate(10)->withQueryString();
-
-    //     return view('admin.pelayanan.laporan', compact('jadwals'));
-    // }
 
     public function edit($id)
     {
@@ -129,5 +105,30 @@ class PelayananController extends Controller
             ->get();
 
         return view('user.schedule', compact('jadwals'));
+    }
+
+    public function checkNextMonthSchedule()
+    {
+        $nextMonth = Carbon::now()->addMonth()->month;
+        $nextYear = Carbon::now()->addMonth()->year;
+
+        $scheduleExists = JadwalPelayanan::whereMonth('date', $nextMonth)
+            ->whereYear('date', $nextYear)
+            ->exists();
+
+        return response()->json(['exists' => $scheduleExists]);
+    }
+
+    public function showNextMonthSchedule()
+    {
+        $nextMonth = Carbon::now()->addMonth()->month;
+        $nextYear = Carbon::now()->addMonth()->year;
+
+        $jadwals = JadwalPelayanan::whereMonth('date', $nextMonth)
+            ->whereYear('date', $nextYear)
+            ->orderBy('date')
+            ->get();
+
+        return view('admin.pelayanan.jadwal_selanjutnya', compact('jadwals'));
     }
 }

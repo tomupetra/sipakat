@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Availability;
+use App\Models\HistoryJadwalPelayanan;
 use App\Models\JadwalPelayanan;
 use Carbon\Carbon;
 
@@ -15,7 +16,11 @@ class ScheduleService
         $keyboardists = User::where('id_tugas', 1)->get();
         $songLeaders = User::where('id_tugas', 2)->get();
 
-        $dates = Availability::distinct('date')->pluck('date');
+        // Ambil tanggal yang tersedia hanya untuk bulan ini
+        $dates = Availability::distinct('date')
+            ->whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
+            ->pluck('date');
 
         // Menyimpan riwayat penugasan pengguna untuk menghindari penugasan berturut-turut
         $previousAssignments = [
@@ -27,6 +32,13 @@ class ScheduleService
         $assignmentCount = [];
 
         foreach ($dates as $date) {
+            // Cek apakah sudah ada jadwal untuk tanggal ini
+            $existingSchedules = JadwalPelayanan::where('date', $date)->exists();
+
+            if ($existingSchedules) {
+                continue; // Lewati tanggal ini jika sudah ada jadwal
+            }
+
             $availableKeyboardists = $this->getAvailableUsers($keyboardists, $date);
             $availableSongLeaders = $this->getAvailableUsers($songLeaders, $date);
 
@@ -40,6 +52,7 @@ class ScheduleService
 
                 // Simpan jadwal ke database
                 foreach ($schedule as $session => $assignedUsers) {
+
                     JadwalPelayanan::create([
                         'date' => $date,
                         'jadwal' => $session,
@@ -131,5 +144,115 @@ class ScheduleService
 
         // Jika tidak ada yang tersisa, fallback ke memilih pengguna yang sudah ditugaskan berturut-turut
         return $availableUsers->random();
+    }
+
+    public function confirmOverdueSchedules()
+    {
+        // Ambil semua jadwal yang belum dikonfirmasi dan sudah melewati deadline
+        $overdueSchedules = JadwalPelayanan::where('is_confirmed', 0)
+            ->where('confirmation_deadline', '<', Carbon::now())
+            ->get();
+
+        foreach ($overdueSchedules as $jadwal) {
+            // Update status menjadi dikonfirmasi
+            $jadwal->update(['is_confirmed' => 1]);
+
+            // Pindahkan ke history jika diperlukan
+            HistoryJadwalPelayanan::create([
+                'jadwal_pelayanan_id' => $jadwal->id,
+                'date' => $jadwal->date,
+                'jadwal' => $jadwal->jadwal,
+                'id_pemusik' => $jadwal->id_pemusik,
+                'id_sl1' => $jadwal->id_sl1,
+                'id_sl2' => $jadwal->id_sl2,
+                'is_confirmed' => 1,
+                'is_locked' => 1,
+            ]);
+        }
+    }
+
+    public function checkScheduleForCurrentMonth()
+    {
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+
+        $scheduleExists = JadwalPelayanan::whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->exists();
+
+        return response()->json(['exists' => $scheduleExists]);
+    }
+
+    public function generateNextMonthSchedule()
+    {
+        $nextMonth = Carbon::now()->addMonth()->month;
+        $nextYear = Carbon::now()->addMonth()->year;
+
+        // Fetch available dates for the next month
+        $dates = Availability::distinct('date')
+            ->whereMonth('date', $nextMonth)
+            ->whereYear('date', $nextYear)
+            ->pluck('date');
+
+        // If no availability data, generate dates for the entire month
+        if ($dates->isEmpty()) {
+            $dates = collect(range(1, Carbon::now()->addMonth()->daysInMonth))->map(function ($day) use ($nextMonth, $nextYear) {
+                return Carbon::create($nextYear, $nextMonth, $day)->toDateString();
+            });
+        }
+
+        // Filter dates to include only Sundays
+        $sundays = $dates->filter(function ($date) {
+            return Carbon::parse($date)->isSunday();
+        });
+
+        // Initialize assignment count
+        $assignmentCount = [];
+
+        // Logic to generate schedule for each Sunday
+        foreach ($sundays as $date) {
+            // Check if a schedule already exists for this date
+            $existingSchedules = JadwalPelayanan::where('date', $date)->exists();
+
+            if ($existingSchedules) {
+                continue; // Skip if a schedule already exists
+            }
+
+            // Fetch available users for the date
+            $keyboardists = User::where('id_tugas', 1)->get();
+            $songLeaders = User::where('id_tugas', 2)->get();
+
+            $availableKeyboardists = $this->getAvailableUsers($keyboardists, $date);
+            $availableSongLeaders = $this->getAvailableUsers($songLeaders, $date);
+
+            // If not enough available users, fill with random users
+            if (count($availableKeyboardists) < 3) {
+                $additionalKeyboardists = $keyboardists->diff($availableKeyboardists)->random(3 - count($availableKeyboardists));
+                $availableKeyboardists = $availableKeyboardists->merge($additionalKeyboardists);
+            }
+
+            if (count($availableSongLeaders) < 6) {
+                $additionalSongLeaders = $songLeaders->diff($availableSongLeaders)->random(6 - count($availableSongLeaders));
+                $availableSongLeaders = $availableSongLeaders->merge($additionalSongLeaders);
+            }
+
+            // Initialize and save the schedule
+            $sessions = ['07:00', '10:00', '18:00'];
+            $schedule = $this->initializeSchedule($sessions, $availableKeyboardists, $availableSongLeaders, [], $date, $assignmentCount);
+
+            foreach ($schedule as $session => $assignedUsers) {
+                JadwalPelayanan::create([
+                    'date' => $date,
+                    'jadwal' => $session,
+                    'id_pemusik' => $assignedUsers['keyboardist']->id,
+                    'id_sl1' => $assignedUsers['song_leaders'][0]->id,
+                    'id_sl2' => $assignedUsers['song_leaders'][1]->id,
+                    'status' => 0, // Status "Menunggu"
+                    'confirmation_deadline' => Carbon::parse($date)->subDays(3), // Set batas waktu konfirmasi
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.jadwal-pelayanan')->with('success', 'Jadwal untuk bulan berikutnya berhasil dibuat.');
     }
 }

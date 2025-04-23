@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HistoryJadwalPelayanan;
+use Carbon\Carbon;
 
 class JadwalPelayanan extends Model
 {
@@ -46,5 +47,10 @@ class JadwalPelayanan extends Model
     public function history()
     {
         return $this->hasMany(HistoryJadwalPelayanan::class);
+    }
+
+    public function canBeModified()
+    {
+        return !$this->is_confirmed && Carbon::now()->lessThanOrEqualTo($this->date);
     }
 }

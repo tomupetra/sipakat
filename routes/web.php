@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\JadwalController;
 use App\Http\Controllers\Admin\ValidasiRuangController;
 use App\Http\Controllers\Admin\PelayananController;
 use App\Http\Controllers\User\KonfirmasiJadwalController;
-
+use App\Services\ScheduleService;
 use App\Http\Controllers\User\JadwalPelayananController;
 use App\Http\Controllers\User\PinjamRuanganController;
 use Illuminate\Support\Facades\Route;
@@ -117,6 +117,14 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::put('/admin/jadwal/{id}', [PelayananController::class, 'update'])->name('admin.update-jadwal');  // Menggunakan PUT untuk update
     Route::delete('/admin/jadwal/{id}', [PelayananController::class, 'destroy'])->name('admin.delete-jadwal');
 
+
+    Route::get('/admin/check-schedule-current-month', [ScheduleService::class, 'checkScheduleForCurrentMonth'])->name('admin.check-schedule-current-month');
+    Route::get('/admin/generate-next-month-schedule', [ScheduleService::class, 'generateNextMonthSchedule'])->name('admin.generate-next-month-schedule');
+
+
     Route::get('/admin/laporan-pelayanan', [KonfirmasiJadwalController::class, 'getLaporan'])->name('laporan.pelayanan');
     Route::get('/admin/laporan-pelayanan/export-pdf', [KonfirmasiJadwalController::class, 'exportPDF'])->name('laporan.exportPDF');
+
+    Route::get('/admin/check-next-month-schedule', [PelayananController::class, 'checkNextMonthSchedule'])->name('admin.check-next-month-schedule');
+    Route::get('/admin/show-next-month-schedule', [PelayananController::class, 'showNextMonthSchedule'])->name('admin.show-next-month-schedule');
 });
