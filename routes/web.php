@@ -24,9 +24,10 @@ Route::get('/', [LandingPageController::class, 'showLandingPage']);
 
 
 Route::get('/renungan', [RenunganController::class, 'showRenungan']);
+Route::get('/renungan/detail/{id}', [RenunganController::class, 'detailRenungan']);
 
 Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
-Route::get('/berita/{id}', [BeritaController::class, 'showBeritaLanding'])->name('berita.show');
+Route::get('/berita/{id}', [BeritaController::class, 'show'])->name('berita.detail');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -59,7 +60,7 @@ Route::middleware(['auth', 'userMiddleware'])->group(function () {
 // Admin Routes
 Route::middleware(['auth', 'adminMiddleware'])->group(function () {
 
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     Route::get('/admin/warta', [WartaController::class, 'index'])->name('admin.warta.index');
     Route::get('/admin/warta/upload-warta', [WartaController::class, 'create'])->name('admin.warta.create');
@@ -80,7 +81,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/renungan/list', [RenunganController::class, 'listRenungan']);
     Route::get('/admin/renungan/tambah', [RenunganController::class, 'tambahRenungan']);
     Route::post('/admin/renungan/tambah', [RenunganController::class, 'insertRenungan']);
-    Route::get('/admin/renungan/detail/{id}', [RenunganController::class, 'detailRenungan']);
+    Route::get('/admin/renungan/detail/{id}', [RenunganController::class, 'lihatDetail']);
     Route::get('/admin/renungan/edit/{id}', [RenunganController::class, 'editRenungan'])->name('renungan.edit');
     Route::post('/admin/renungan/edit/{id}', [RenunganController::class, 'updateRenungan']);
     Route::delete('/admin/renungan/delete/{id}', [RenunganController::class, 'deleteRenungan']);
@@ -92,6 +93,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/berita/edit/{id}', [BeritaController::class, 'editBerita']);
     Route::post('/admin/berita/edit/{id}', [BeritaController::class, 'updateBerita']);
     Route::delete('/admin/berita/delete/{id}', [BeritaController::class, 'deleteBerita']);
+
 
     // Route Kelola Jadwal Ruangan
 

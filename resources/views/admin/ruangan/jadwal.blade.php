@@ -33,8 +33,72 @@
         </div>
     </div>
 
+    <!-- Modal for Viewing Schedule Details -->
+    <div class="modal fade" id="viewScheduleModal" tabindex="-1" aria-labelledby="viewScheduleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewScheduleModalLabel">Detail Jadwal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Title:</strong> <span id="viewTitle"></span></p>
+                    <p><strong>Start:</strong> <span id="viewStart"></span></p>
+                    <p><strong>End:</strong> <span id="viewEnd"></span></p>
+                    <p><strong>Description:</strong> <span id="viewDescription"></span></p>
+                    <button type="button" class="btn btn-primary" id="editButton" data-bs-toggle="modal"
+                        data-bs-target="#editScheduleModal">Edit</button>
+                    <button type="button" class="btn btn-danger" id="deleteButton">Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Editing Schedule -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScheduleModalLabel">Edit Jadwal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEventForm" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" id="editEventId" name="id">
+                        <div class="form-group">
+                            <label for='editTitle'>{{ __('Title') }}</label>
+                            <input type='text' class='form-control' id='editTitle' name='title' required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editStart">{{ __('Start') }}</label>
+                            <input type='datetime-local' class='form-control' id='editStart' name='start' required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editEnd">{{ __('End') }}</label>
+                            <input type='datetime-local' class='form-control' id='editEnd' name='end' required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editDescription">{{ __('Description') }}</label>
+                            <input type="text" id="editDescription" name="description" class="form-control">
+                        </div>
+
+                        <button type="submit" class="btn btn-success">{{ __('Save Changes') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for Adding Schedule -->
-    <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -91,6 +155,9 @@
             /* Increase font size */
             padding: 5px;
             /* Increase padding */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 
@@ -98,6 +165,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -112,7 +180,7 @@
                 console.error('Calendar element not found');
                 return;
             }
-            
+
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 headerToolbar: {
                     left: 'prev,next today',
@@ -120,28 +188,36 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 initialView: 'dayGridMonth',
-                timeZone: 'UTC',
+                timeZone: 'Asia/Jakarta', // Use local computer timezone
                 events: '/api/events',
-                editable: true,
+                editable: true, // Ensure events are editable
+                eventClick: function(info) {
+                    $('#viewTitle').text(info.event.title);
+                    $('#viewStart').text(moment(info.event.start).format('YYYY-MM-DD HH:mm'));
+                    $('#viewEnd').text(moment(info.event.end).format('YYYY-MM-DD HH:mm'));
+                    $('#viewDescription').text(info.event.extendedProps.description || '-');
+                    $('#editEventId').val(info.event.id);
+                    $('#editTitle').val(info.event.title);
+                    $('#editStart').val(moment(info.event.start).format('YYYY-MM-DDTHH:mm'));
+                    $('#editEnd').val(moment(info.event.end).format('YYYY-MM-DDTHH:mm'));
+                    $('#editDescription').val(info.event.extendedProps.description || '-');
+                    $('#viewScheduleModal').modal('show');
+                },
                 eventContent: function(info) {
-                    // Custom event content with delete icon
                     var eventTitle = info.event.title;
                     var eventElement = document.createElement('div');
-                    eventElement.innerHTML =
-                        '<span style="cursor: pointer;"> <img width="25" height="25" src="https://img.icons8.com/color/30/cancel--v1.png" alt="cancel--v1"/> </span> ' +
-                        eventTitle;
-
-                    // Add click event listener for the delete icon
-                    eventElement.querySelector('span').addEventListener('click', function() {
-                        var eventId = info.event.id;
-                        if (confirm("Apakah Anda yakin ingin menghapus jadwal ini?")) {
-                            deleteEvent(eventId);
-                        }
-                    });
+                    eventElement.innerHTML = eventTitle;
 
                     return {
                         domNodes: [eventElement]
                     };
+                },
+                eventDidMount: function(info) {
+                    if (info.event.extendedProps.color) {
+                        info.el.style.backgroundColor = info.event.extendedProps.color;
+                        info.el.style.borderColor = info.event.extendedProps.color;
+                        info.el.style.color = "#ffffff";
+                    }
                 },
                 eventDrop: function(info) {
                     var eventId = info.event.id;
@@ -153,8 +229,10 @@
                         method: 'PUT',
                         data: {
                             '_token': "{{ csrf_token() }}",
-                            start: moment(newStartDate).format('YYYY-MM-DDTHH:mm:ssZ'),
-                            end: moment(newEndDate).format('YYYY-MM-DDTHH:mm:ssZ'),
+                            start: moment.tz(newStartDate, 'Asia/Jakarta').format(
+                                'YYYY-MM-DDTHH:mm:ssZ'),
+                            end: moment.tz(newEndDate, 'Asia/Jakarta').format(
+                                'YYYY-MM-DDTHH:mm:ssZ'),
                         },
                         success: function() {
                             console.log('Event moved successfully.');
@@ -168,13 +246,6 @@
                 },
                 eventResize: function(info) {
                     updateEvent(info.event.id, info.event.start, info.event.end);
-                },
-                eventDidMount: function(info) {
-                    if (info.event.extendedProps.color) {
-                        info.el.style.backgroundColor = info.event.extendedProps.color;
-                        info.el.style.borderColor = info.event.extendedProps.color;
-                        info.el.style.color = "#ffffff";
-                    }
                 }
             });
 
@@ -203,6 +274,36 @@
                 });
             });
 
+            // Handle delete button click
+            $('#deleteButton').on('click', function() {
+                var eventId = $('#editEventId').val();
+                if (confirm("Apakah Anda yakin ingin menghapus jadwal ini?")) {
+                    deleteEvent(eventId);
+                }
+            });
+
+            // Form submission using AJAX for editing
+            $('#editEventForm').on('submit', function(e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+                var eventId = $('#editEventId').val();
+
+                $.ajax({
+                    url: `/admin/ruangan/update/${eventId}`,
+                    method: 'PUT',
+                    data: formData,
+                    success: function(response) {
+                        $('#editScheduleModal').modal('hide');
+                        calendar.refetchEvents();
+                        alert('Jadwal berhasil diperbarui.');
+                    },
+                    error: function(xhr) {
+                        console.error('Error updating schedule:', xhr.responseJSON.message);
+                        alert('Gagal memperbarui jadwal. Silakan coba lagi.');
+                    }
+                });
+            });
+
             // Delete event function
             function deleteEvent(eventId) {
                 $.ajax({
@@ -226,12 +327,12 @@
                     method: 'PUT',
                     data: {
                         '_token': "{{ csrf_token() }}",
-                        start: start.toISOString(),
-                        end: end.toISOString(),
+                        start: moment.tz(start, 'Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ssZ'),
+                        end: moment.tz(end, 'Asia/Jakarta').format('YYYY-MM-DDTHH:mm:ssZ'),
                     },
                     success: function() {
                         console.log('Event updated successfully.');
-                        calendar.refetchEvents(); // Ensure the calendar is updated
+                        calendar.refetchEvents();
                     },
                     error: function(error) {
                         console.error('Error updating event:', error);

@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jadwal;
+use App\Models\JadwalPelayanan;
+use App\Models\PinjamRuangan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        return view('admin.dashboard');
-    }
+    // public function index()
+    // {
+    //     return view('admin.dashboard');
+    // }
 
     public function list()
     {
@@ -80,5 +83,15 @@ class AdminController extends Controller
         $user->delete();
 
         return redirect('admin/kelolaakun')->with('success', "Akun berhasil dihapus.");
+    }
+
+    public function dashboard()
+    {
+        $jumlahPemusik = User::where('id_tugas', '1')->count();
+        $jumlahSongLeader = User::where('id_tugas', '2')->count();
+        $jumlahPeminjamanBelumValidasi = PinjamRuangan::where('status', 'Diajukan')->count();
+        $jumlahJadwalBelumDikonfirmasi = JadwalPelayanan::where('is_confirmed', '0')->count();
+
+        return view('admin.dashboard', compact('jumlahPemusik', 'jumlahSongLeader', 'jumlahPeminjamanBelumValidasi', 'jumlahJadwalBelumDikonfirmasi'));
     }
 }

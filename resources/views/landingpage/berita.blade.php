@@ -10,11 +10,11 @@
             @foreach ($berita as $value)
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
-                        <img class="card-img-top" src="{{ asset('storage/' . $value->image) }}" alt="Card image cap">
+
                         <div class="card-body">
                             <h2 class="card-title">{{ $value->title }}</h2>
-                            <p class="card-text">{{ Str::limit($value->content, 200) }}</p>
-                            <a href="{{ url('berita/' . $value->id) }}" class="btn btn-primary">Read More &rarr;</a>
+                            <p class="card-text">{{ Str::limit(strip_tags($value->content), 200) }}</p>
+                            <a href="{{ route('berita.detail', $value->id) }}" class="btn btn-primary">Read More &rarr;</a>
                         </div>
                         <div class="card-footer text-muted">
                             Posted on {{ \Carbon\Carbon::parse($value->date)->format('F d, Y') }}

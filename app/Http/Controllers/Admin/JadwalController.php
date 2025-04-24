@@ -18,7 +18,7 @@ class JadwalController extends Controller
         //     ->with(['ruangan', 'user'])
         //     ->get();
         $rooms = Ruangan::all();
-        return view('/admin/ruangan/jadwal', compact( 'rooms'));
+        return view('/admin/ruangan/jadwal', compact('rooms'));
     }
 
     public function create(Request $request)
@@ -31,8 +31,8 @@ class JadwalController extends Controller
             'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
-        $validated['start'] = Carbon::parse($validated['start'])->setTimezone('UTC')->format('Y-m-d H:i:s');
-        $validated['end'] = Carbon::parse($validated['end'])->setTimezone('UTC')->format('Y-m-d H:i:s');
+        $validated['start'] = Carbon::parse($validated['start'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
+        $validated['end'] = Carbon::parse($validated['end'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
         // $validated['color'] = $validated['color'] ?? '#000000';
 
         Jadwal::create($validated);
@@ -46,8 +46,8 @@ class JadwalController extends Controller
             return [
                 'id' => $event->id,
                 'title' => $event->title,
-                'start' => Carbon::parse($event->start)->toIso8601String(),
-                'end' => Carbon::parse($event->end)->toIso8601String(),
+                'start' => Carbon::parse($event->start)->setTimezone('Asia/Jakarta')->toIso8601String(),
+                'end' => Carbon::parse($event->end)->setTimezone('Asia/Jakarta')->toIso8601String(),
                 'color' => $event->color,
                 'description' => $event->description,
             ];
@@ -76,16 +76,15 @@ class JadwalController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start' => 'required|date_format:Y-m-d\TH:i:sP',
-                'end' => 'required|date_format:Y-m-d\TH:i:sP|after_or_equal:start',
+                'title' => 'required|string|max:255',
+                'start' => 'required|date_format:Y-m-d\TH:i',
+                'end' => 'required|date_format:Y-m-d\TH:i|after_or_equal:start',
+                'description' => 'nullable|string',
+                'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             ]);
 
-            if (isset($validated['start'])) {
-                $validated['start'] = Carbon::parse($validated['start'])->timezone('UTC');
-            }
-            if (isset($validated['end'])) {
-                $validated['end'] = Carbon::parse($validated['end'])->setTimezone('UTC');
-            }
+            $validated['start'] = Carbon::parse($validated['start'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
+            $validated['end'] = Carbon::parse($validated['end'])->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
 
             $schedule = Jadwal::findOrFail($id);
             $schedule->update($validated);
@@ -104,8 +103,8 @@ class JadwalController extends Controller
                 'end' => 'required|date_format:Y-m-d\TH:i:sP|after_or_equal:start',
             ]);
 
-            $validated['start'] = Carbon::parse($validated['start'])->timezone('UTC');
-            $validated['end'] = Carbon::parse($validated['end'])->timezone('UTC');
+            $validated['start'] = Carbon::parse($validated['start'])->setTimezone('Asia/Jakarta');
+            $validated['end'] = Carbon::parse($validated['end'])->setTimezone('Asia/Jakarta');
 
             $schedule = Jadwal::findOrFail($id);
             $schedule->update($validated);

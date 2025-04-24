@@ -109,9 +109,9 @@ class BeritaController extends Controller
         return view('landingpage.berita', compact('berita'));
     }
 
-    public function showBeritaLandingDetail($id)
+    public function show($id)
     {
-        $data['getRecord'] = Berita::getRecord($id);
-        return view('landingpage.berita_detail', $data);
+        $berita = Berita::findOrFail($id);
+        return view('berita.detail', compact('berita'));
     }
 }

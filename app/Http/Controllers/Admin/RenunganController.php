@@ -9,20 +9,24 @@ use Mews\Purifier\Facades\Purifier;
 
 class RenunganController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         return view('admin.dashboard');
     }
 
-    public function listRenungan(){
+    public function listRenungan()
+    {
         $data['getRecord'] = Renungan::getRecord();
         return view('renungan.list', $data);
     }
 
-    public function tambahRenungan(){
+    public function tambahRenungan()
+    {
         return view('renungan.tambah');
     }
 
-    public function insertRenungan(Request $request){
+    public function insertRenungan(Request $request)
+    {
         $request->validate([
             'date' => 'required|date',
             'ayat_harian' => 'required|string',
@@ -35,7 +39,7 @@ class RenunganController extends Controller
         ]);
 
         $content = Purifier::clean($request->content);
-    
+
         $renungan = new Renungan;
         $renungan->date = $request->date;
         $renungan->ayat_harian = $request->ayat_harian;
@@ -44,29 +48,38 @@ class RenunganController extends Controller
         $renungan->lagu_ende = $request->lagu_ende;
         $renungan->title = $request->title;
         $renungan->content = $request->content;
-    
+
         if ($request->hasFile('image')) {
-            $imageName = time().'.'.$request->image->extension();  
+            $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
             $renungan->image = $imageName;
         }
-    
+
         $renungan->save();
-    
+
         return redirect('admin/renungan/list')->with('success', "Renungan berhasil ditambahkan.");
     }
 
-    public function showRenungan(){
+    public function showRenungan()
+    {
         $renungan = Renungan::all();
         return view('landingpage.renungan', compact('renungan'));
     }
 
-    public function editRenungan($id){
+    public function lihatDetail($id)
+    {
+        $renungan = Renungan::findOrFail($id);
+        return response()->json($renungan);
+    }
+
+    public function editRenungan($id)
+    {
         $data['getRecord'] = Renungan::find($id);
         return view('renungan.edit', $data);
     }
 
-    public function updateRenungan(Request $request, $id){
+    public function updateRenungan(Request $request, $id)
+    {
         $request->validate([
             'date' => 'required|date',
             'ayat_harian' => 'required|string',
@@ -77,7 +90,7 @@ class RenunganController extends Controller
             'content' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
         ]);
-    
+
         $renungan = Renungan::find($id);
         $renungan->date = $request->date;
         $renungan->ayat_harian = $request->ayat_harian;
@@ -86,29 +99,29 @@ class RenunganController extends Controller
         $renungan->lagu_ende = $request->lagu_ende;
         $renungan->title = $request->title;
         $renungan->content = $request->content;
-    
+
         if ($request->hasFile('image')) {
-            $imageName = time().'.'.$request->image->extension();  
+            $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('images'), $imageName);
             $renungan->image = $imageName;
         }
-    
+
         $renungan->save();
-    
+
         return redirect('admin/renungan/list')->with('success', "Renungan berhasil diubah.");
     }
 
-    public function deleteRenungan($id){
+    public function deleteRenungan($id)
+    {
         $renungan = Renungan::getSingle($id);
         $renungan->delete();
-        
+
         return redirect('admin/renungan/list')->with('success', "Renungan berhasil dihapus.");
-        
     }
 
     public function detailRenungan($id)
     {
         $renungan = Renungan::findOrFail($id);
-        return response()->json($renungan);
+        return view('renungan.detail', compact('renungan'));
     }
 }

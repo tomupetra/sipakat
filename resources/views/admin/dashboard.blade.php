@@ -7,39 +7,47 @@
         <li class="breadcrumb-item active">Dashboard</li>
     </ol>
     <div class="row">
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body">Primary Card</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="#">View Details</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-music fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Jumlah Pemusik</h5>
+                    <h2>{{ $jumlahPemusik }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-warning text-white mb-4">
-                <div class="card-body">Warning Card</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="#">View Details</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-microphone fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">Jumlah Song Leader</h5>
+                    <h2>{{ $jumlahSongLeader }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-success text-white mb-4">
-                <div class="card-body">Success Card</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="#">View Details</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-door-open fa-2x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Peminjaman Belum Validasi</h5>
+                    <h2>{{ $jumlahPeminjamanBelumValidasi }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card bg-danger text-white mb-4">
-                <div class="card-body">Danger Card</div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="#">View Details</a>
-                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-calendar-check fa-2x text-danger"></i>
+                    </div>
+                    <h5 class="card-title">Jadwal Belum Dikonfirmasi</h5>
+                    <h2>{{ $jumlahJadwalBelumDikonfirmasi }}</h2>
                 </div>
             </div>
         </div>

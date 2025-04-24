@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/pell/dist/pell.min.css">
     <script src="https://unpkg.com/pell"></script>
-
+    <link rel="icon" href="{{ asset('assets/img/logo.png') }}" type="image/png">
 
 </head>
 

@@ -33,11 +33,14 @@
                                     <td>{{ Str::limit($value->ayat_harian, 25) }}</td>
                                     <td>{{ Str::limit($value->title, 15) }}</td>
                                     <td>
-                                        {{Str::limit($value->content, 30)}}</td>
+                                        {{ Str::limit($value->content, 30) }}</td>
                                     <td>
-                                        <button class="btn btn-primary btn-sm" onclick="showDetailModal({{ $value->id }})">Lihat Detail</button>
-                                        <a href="{{ url('admin/renungan/edit/' . $value->id) }}" class="btn btn-primary btn-sm">Edit</a>
-                                        <button class="btn btn-danger btn-sm" onclick="showDeleteModal({{ $value->id }})">Hapus</button>
+                                        <button class="btn btn-primary btn-sm"
+                                            onclick="showDetailModal({{ $value->id }})">Lihat Detail</button>
+                                        <a href="{{ url('admin/renungan/edit/' . $value->id) }}"
+                                            class="btn btn-primary btn-sm">Edit</a>
+                                        <button class="btn btn-danger btn-sm"
+                                            onclick="showDeleteModal({{ $value->id }})">Hapus</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -115,4 +118,4 @@
                 deleteModal.show();
             }
         </script>
-@endsection
+    @endsection
