@@ -17,6 +17,7 @@ use App\Http\Controllers\User\JadwalPelayananController;
 use App\Http\Controllers\User\PinjamRuanganController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/', function () {
     return view('landingpage/landingpage');
 });
@@ -36,7 +37,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-
 
 
 // User Routes

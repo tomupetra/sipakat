@@ -2,7 +2,6 @@
 
 use App\Http\Middleware\UserMiddleware;
 use App\Http\Middleware\AdminMiddleware;
-use App\Models\JadwalPelayanan;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('user-auto-confirm')->dailyAt('00:01');
+        $schedule->command('konfirmasi-jadwal-otomatis')->dailyAt('00:01');
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('insert-history-jadwal-pelayanan')->monthlyOn(1, '00:01');
     })
     ->create();

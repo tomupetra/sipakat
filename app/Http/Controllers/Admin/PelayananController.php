@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ScheduleService;
 use App\Models\JadwalPelayanan;
 use App\Models\User;
+use App\Notifications\NotifikasiJadwalBaru;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -82,6 +83,15 @@ class PelayananController extends Controller
             'id_sl1' => $request->id_sl1,
             'id_sl2' => $request->id_sl2,
         ]);
+
+        // Kirim notifikasi ke pengguna baru
+        $pemusik = User::find($request->id_pemusik);
+        $sl1 = User::find($request->id_sl1);
+        $sl2 = User::find($request->id_sl2);
+
+        $pemusik->notify(new NotifikasiJadwalBaru($jadwal));
+        $sl1->notify(new NotifikasiJadwalBaru($jadwal));
+        $sl2->notify(new NotifikasiJadwalBaru($jadwal));
 
         // Redirect ke halaman daftar jadwal setelah berhasil update
         return redirect()->route('admin.jadwal-pelayanan')->with('success', 'Jadwal berhasil diperbarui!');

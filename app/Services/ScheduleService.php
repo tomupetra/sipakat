@@ -7,6 +7,7 @@ use App\Models\Availability;
 use App\Models\HistoryJadwalPelayanan;
 use App\Models\JadwalPelayanan;
 use Carbon\Carbon;
+use App\Notifications\NotifikasiJadwalBaru;
 
 class ScheduleService
 {
@@ -52,8 +53,7 @@ class ScheduleService
 
                 // Simpan jadwal ke database
                 foreach ($schedule as $session => $assignedUsers) {
-
-                    JadwalPelayanan::create([
+                    $jadwal = JadwalPelayanan::create([
                         'date' => $date,
                         'jadwal' => $session,
                         'id_pemusik' => $assignedUsers['keyboardist']->id,
@@ -62,6 +62,11 @@ class ScheduleService
                         'status' => 0, // Status "Menunggu"
                         'confirmation_deadline' => $confirmationDeadline, // Set batas waktu konfirmasi
                     ]);
+
+                    // Kirim notifikasi ke pengguna yang terlibat
+                    $assignedUsers['keyboardist']->notify(new NotifikasiJadwalBaru($jadwal));
+                    $assignedUsers['song_leaders'][0]->notify(new NotifikasiJadwalBaru($jadwal));
+                    $assignedUsers['song_leaders'][1]->notify(new NotifikasiJadwalBaru($jadwal));
 
                     // Update riwayat penugasan
                     $previousAssignments['keyboardists'][] = $assignedUsers['keyboardist']->id;

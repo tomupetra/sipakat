@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use App\Models\HistoryJadwalPelayanan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\User;
+use App\Notifications\NotifikasiJadwalBaru;
 
 class KonfirmasiJadwalController extends Controller
 {
@@ -138,7 +139,6 @@ class KonfirmasiJadwalController extends Controller
             ->get();
 
         if ($availableMusicians->isEmpty()) {
-            // Jika tidak ada yang tersedia, pilih secara acak dari semua pemusik
             $availableMusicians = User::where('id_tugas', 1)
                 ->where('id', '!=', $jadwal->id_pemusik)
                 ->get();
@@ -147,6 +147,12 @@ class KonfirmasiJadwalController extends Controller
         if ($availableMusicians->isNotEmpty()) {
             $newMusician = $availableMusicians->random();
             $jadwal->update(['id_pemusik' => $newMusician->id]);
+
+            // Set status_pemusik to 0
+            $jadwal->update(['status_pemusik' => 0]);
+
+            // Kirim notifikasi ke pemusik pengganti
+            $newMusician->notify(new NotifikasiJadwalBaru($jadwal));
         }
     }
 
@@ -160,7 +166,6 @@ class KonfirmasiJadwalController extends Controller
             ->get();
 
         if ($availableSongLeaders->isEmpty()) {
-            // Jika tidak ada yang tersedia, pilih secara acak dari semua song leader
             $availableSongLeaders = User::where('id_tugas', 2)
                 ->where('id', '!=', $jadwal->id_sl1)
                 ->get();
@@ -169,6 +174,12 @@ class KonfirmasiJadwalController extends Controller
         if ($availableSongLeaders->isNotEmpty()) {
             $newSongLeader1 = $availableSongLeaders->random();
             $jadwal->update(['id_sl1' => $newSongLeader1->id]);
+
+            // Set status_sl1 to 0
+            $jadwal->update(['status_sl1' => 0]);
+
+            // Kirim notifikasi ke Song Leader 1 pengganti
+            $newSongLeader1->notify(new NotifikasiJadwalBaru($jadwal));
         }
     }
 
@@ -182,7 +193,6 @@ class KonfirmasiJadwalController extends Controller
             ->get();
 
         if ($availableSongLeaders->isEmpty()) {
-            // Jika tidak ada yang tersedia, pilih secara acak dari semua song leader
             $availableSongLeaders = User::where('id_tugas', 2)
                 ->where('id', '!=', $jadwal->id_sl2)
                 ->get();
@@ -191,6 +201,12 @@ class KonfirmasiJadwalController extends Controller
         if ($availableSongLeaders->isNotEmpty()) {
             $newSongLeader2 = $availableSongLeaders->random();
             $jadwal->update(['id_sl2' => $newSongLeader2->id]);
+
+            // Set status_sl2 to 0
+            $jadwal->update(['status_sl2' => 0]);
+
+            // Kirim notifikasi ke Song Leader 2 pengganti
+            $newSongLeader2->notify(new NotifikasiJadwalBaru($jadwal));
         }
     }
 

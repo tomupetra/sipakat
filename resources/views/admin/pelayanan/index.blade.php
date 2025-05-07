@@ -88,8 +88,6 @@
                                             @if ($jadwal->status_sl2 == 1)
                                                 <i class="fas fa-check-circle text-success ms-2"
                                                     title="Sudah Konfirmasi"></i>
-                                            @elseif ($jadwal->status_sl2 == 2)
-                                                <i class="fas fa-times-circle text-danger ms-2" title="Ditolak"></i>
                                             @else
                                                 <i class="fas fa-exclamation-circle text-warning ms-2"
                                                     title="Belum Konfirmasi"></i>
