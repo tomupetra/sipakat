@@ -1,4 +1,4 @@
-<nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+<nav class="sb-sidenav accordion" id="sidenavAccordion" style="background-color: #000033;">
     <div class="sb-sidenav-menu">
         <div class="nav">
             <div class="sb-sidenav-menu-heading">Core</div>
@@ -40,7 +40,7 @@
                     <a class="nav-link" href="{{ url('admin/galeri') }}">Galeri</a>
                 </nav>
             </div>
-            <div class="sb-sidenav-menu-heading">Addons</div>
+            <div class="sb-sidenav-menu-heading">Ruangan</div>
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRuangan"
                 aria-expanded="false" aria-controls="collapseRuangan">
                 <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>

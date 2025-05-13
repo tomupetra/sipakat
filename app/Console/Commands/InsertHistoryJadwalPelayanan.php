@@ -18,7 +18,7 @@ class InsertHistoryJadwalPelayanan extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Memindahkan jadwal pelayanan yang sudah lewat ke history dan menghapusnya dari jadwal_pelayanan';
 
     /**
      * Execute the console command.
@@ -32,6 +32,7 @@ class InsertHistoryJadwalPelayanan extends Command
         $jadwals = \App\Models\JadwalPelayanan::where('date', '<', $firstDayOfThisMonth)->get();
 
         foreach ($jadwals as $jadwal) {
+            // Pindahkan ke history
             \App\Models\HistoryJadwalPelayanan::create([
                 'jadwal_pelayanan_id' => $jadwal->id,
                 'date' => $jadwal->date,
@@ -42,6 +43,8 @@ class InsertHistoryJadwalPelayanan extends Command
                 'is_confirmed' => $jadwal->is_confirmed,
                 'is_locked' => $jadwal->is_locked,
             ]);
+
+            // Hapus dari jadwal_pelayanan setelah dipindahkan
             $jadwal->delete();
         }
 

@@ -15,7 +15,8 @@
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
-        <a class="btn btn-primary btn-getstarted" href="{{ route('login') }}" id="myBtn">Login</a>
+        <a class="btn btn-primary btn-getstarted" href="{{ route('login') }}" id="myBtn"
+            style="background-color: #000033;">Login</a>
 
     </div>
 </header>

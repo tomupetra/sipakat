@@ -3,20 +3,20 @@
 
 @section('content')
     <!-- Hero Section -->
-    <section id="hero" class="hero section light-background">
+    <section id="hero" class="hero section light-background"
+        style="background-image: url('{{ asset('assets/img/insidegereja.jpg') }}'); background-size: cover; background-position: center;">
 
         <div class="container">
             <div class="row gy-4 justify-content-center justify-content-lg-between">
                 <div class="col-lg-5 order-2 order-lg-1 d-flex flex-column justify-content-center">
-                    <h1 data-aos="fade-up">HKBP Kayu Tinggi Jakarta</h1>
-                    <p data-aos="fade-up" data-aos-delay="100">We are team of talented designers making websites with
-                        Bootstrap</p>
-                    <div class="d-flex" data-aos="fade-up" data-aos-delay="200">
+                    <h1 data-aos="fade-up" style="color: #000000;">HKBP Kayu Tinggi Jakarta</h1>
+                    <div class="d-flex" data-aos="fade-up" data-aos-delay="200" style="padding-top: 50px;">
                         @if ($fileName)
-                            <a href="{{ asset('warta/' . $fileName) }}" class="btn-get-started" target="_blank">Lihat Warta
+                            <a href="{{ asset('warta/' . $fileName) }}" class="btn-get-started" target="_blank"
+                                style="background-color: #35476e;">Lihat Warta
                                 Jemaat</a>
                         @else
-                            <p class="btn-get-started">Warta Jemaat belum tersedia.</p>
+                            <p class="btn-get-started" style="background-color: #35476e;">Warta Jemaat belum tersedia.</p>
                         @endif
                     </div>
                 </div>
@@ -27,56 +27,70 @@
 
     <!-- About Section -->
     <section id="about" class="about section">
-
-        <!-- Section Title -->
         <div class="container section-title" data-aos="fade-up">
-            <h2>About Us<br></h2>
-            <p><span>Learn More</span> <span class="description-title">About Us</span></p>
-        </div><!-- End Section Title -->
+            <h2>Tentang Kami</h2>
+        </div>
 
         <div class="container">
-
-            <div class="row gy-4">
-                <div class="col-lg-7" data-aos="fade-up" data-aos-delay="100">
-                    <img src="assets/img/about.jpg" class="img-fluid mb-4" alt="">
-                    <div class="book-a-table">
-                        <h3>Book a Table</h3>
-                        <p>+1 5589 55488 55</p>
-                    </div>
+            <div class="row gy-4 align-items-center">
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <img src="assets/img/kayutinggi.png" class="img-fluid mb-4" alt="">
                 </div>
-                <div class="col-lg-5" data-aos="fade-up" data-aos-delay="250">
-                    <div class="content ps-0 ps-lg-5">
-                        <p class="fst-italic">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                            incididunt ut labore et dolore
-                            magna aliqua.
+                <div class="col-md-6" data-aos="fade-up" data-aos-delay="250">
+                    <div class="content">
+                        <p class="fst">
+                            HKBP Kayu Tinggi Jakarta adalah bagian dari Huria Kristen Batak Protestan (HKBP), sebuah gereja
+                            Protestan terbesar di Indonesia yang berakar pada tradisi Lutheran dan budaya Batak. Berdiri di
+                            wilayah Jakarta Timur, HKBP Kayu Tinggi hadir sebagai tempat pertumbuhan iman, pelayanan kasih,
+                            dan persekutuan jemaat.
+                            <br><br>
+                            Sejak didirikan pada tahun [tahun berdiri - isi di sini], gereja ini telah menjadi rumah rohani
+                            bagi banyak orang dari berbagai latar belakang, khususnya warga Batak di perantauan. Kami
+                            mengutamakan pelayanan berbasis kasih, pengajaran Alkitab yang mendalam, serta kegiatan-kegiatan
+                            yang mempererat komunitas dalam kasih Kristus.
+                        </p>
+                        <p class="fst">
+                            Visi kami adalah "<strong>Menjadi berkat bagi dunia</strong>"
+                            <br><br>
+                            Misi kami adalah :
                         </p>
                         <ul>
-                            <li><i class="bi bi-check-circle-fill"></i> <span>Ullamco laboris nisi ut aliquip ex ea
-                                    commodo consequat.</span></li>
-                            <li><i class="bi bi-check-circle-fill"></i> <span>Duis aute irure dolor in reprehenderit
-                                    in voluptate velit.</span></li>
-                            <li><i class="bi bi-check-circle-fill"></i> <span>Ullamco laboris nisi ut aliquip ex ea
-                                    commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta
-                                    storacalaperda mastiro dolore eu fugiat nulla pariatur.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Beribadah kepada Allah
+                                    Tri Tunggal Bapa, Anak,
+                                    dan Roh Kudus, dan bersekutu dengan saudara-saudara seiman.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Mendidik jemaat supaya
+                                    sungguh-sungguh menjadi
+                                    anak Allah dan warga negara yang baik.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Mengabarkan Injil
+                                    kepada yang belum mengenal
+                                    Kristus dan yang sudah menjauh dari gereja.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Mendoakan dan
+                                    menyampaikan pesan kenabian
+                                    kepada masyarakat dan negara.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Menggarami dan
+                                    menerangi budaya Batak,
+                                    Indonesia dan global dengan Injil.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Memulihkan harkat dan
+                                    martabat orang kecil dan
+                                    tersisih melalui pendidikan, kesehatan, dan pemberdayaan ekonomi masyarakat.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Membangun dan
+                                    mengembangkan kerjasama antar
+                                    gereja dan dialog lintas agama.</span></li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #35476e;"></i> <span>Mengembangkan
+                                    penatalayanan (pelayan,
+                                    organisasi, administrasi, keuangan, dan aset) dan melaksanakan pembangunan gereja dan
+                                    lingkungan hidup.</span></li>
                         </ul>
                         <p>
-                            Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-                            reprehenderit in voluptate
-                            velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                            proident
-                        </p>
+                            Kami mengadakan ibadah setiap hari Minggu dan berbagai kegiatan rohani lainnya seperti kebaktian
+                            kategorial, pelayanan diakonia, sekolah minggu, serta pembinaan remaja dan pemuda.
 
-                        <div class="position-relative mt-4">
-                            <img src="assets/img/about-2.jpg" class="img-fluid" alt="">
-                            <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn"></a>
-                        </div>
+                            Kami mengundang Anda untuk bertumbuh bersama kami dalam iman, kasih, dan pengharapan.
+                        </p>
                     </div>
                 </div>
             </div>
-
         </div>
-
     </section><!-- /About Section -->
 
     <!-- Pendeta Section -->
@@ -95,13 +109,12 @@
                 <div class="col-md-6 col-lg-5 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
                     <div class="team-member">
                         <div class="member-img">
-                            <img src="assets/img/chefs/chefs-1.jpg" class="img-fluid" alt="">
+                            <img src="{{ asset('images/pdt1.jpg') }}" class="img-fluid" alt=""
+                                style="width: 70%; display: block; margin: 0 auto;">
                         </div>
                         <div class="member-info text-center">
                             <h4>Pdt. Hotlan Nahulae, M. Th</h4>
                             <span>Pendeta Ressort</span>
-                            <p>Velit aut quia fugit et et. Dolorum ea voluptate vel tempore tenetur ipsa quae aut.
-                                Ipsum exercitationem iure minima enim corporis et voluptate.</p>
                         </div>
                     </div>
                 </div><!-- End Chef Team Member -->
@@ -109,13 +122,12 @@
                 <div class="col-md-6 col-lg-5 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
                     <div class="team-member">
                         <div class="member-img">
-                            <img src="assets/img/chefs/chefs-2.jpg" class="img-fluid" alt="">
+                            <img src="{{ asset('images/pdt2.jpg') }}" class="img-fluid" alt=""
+                                style="width: 70%; display: block; margin: 0 auto;">
                         </div>
                         <div class="member-info text-center">
                             <h4>Pdt. Sampe Waruwu, S. Th</h4>
                             <span>Pendeta Fungsional</span>
-                            <p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima
-                                suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p>
                         </div>
                     </div>
                 </div><!-- End Chef Team Member -->
@@ -138,8 +150,7 @@
         <div class="container" data-aos="fade-up" data-aos-delay="100">
             <!-- Add Navigation -->
             <div class="d-flex justify-content-between mb-3">
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-button-next"></div>
+                <!-- Remove navigation buttons from here since they should be inside the swiper container -->
             </div>
 
             <div class="swiper init-swiper">
@@ -150,7 +161,7 @@
                         "autoplay": {
                             "delay": 5000
                         },
-                        "slidesPerView": "auto",
+                        "slidesPerView": 1,
                         "centeredSlides": true,
                         "pagination": {
                             "el": ".swiper-pagination",
@@ -167,11 +178,11 @@
                                 "spaceBetween": 0
                             },
                             "768": {
-                                "slidesPerView": 3,
+                                "slidesPerView": 2,
                                 "spaceBetween": 20
                             },
                             "1200": {
-                                "slidesPerView": 5,
+                                "slidesPerView": 3,
                                 "spaceBetween": 20
                             }
                         }

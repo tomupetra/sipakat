@@ -10897,6 +10897,16 @@ body {
   transition: opacity 0.3s ease-in-out;
 }
 
+.sb-sidenav .nav-link {
+  color: #ffffff;
+  /* Warna putih */
+}
+
+.sb-sidenav .sb-sidenav-menu-heading {
+  color: #ffffff;
+  /* Warna putih */
+}
+
 @media (min-width: 992px) {
   #layoutSidenav #layoutSidenav_nav {
     transform: translateX(0);

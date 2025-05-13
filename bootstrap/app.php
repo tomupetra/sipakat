@@ -19,13 +19,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'adminMiddleware' => AdminMiddleware::class,
         ]);
     })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('app:konfirmasi-jadwal-otomatis')
+            ->dailyAt('00:01')
+            ->sendOutputTo(storage_path('logs/scheduler_konfirmasi.log'))
+            ->appendOutputTo(storage_path('logs/scheduler_konfirmasi.log'));
+
+        $schedule->command('app:insert-history-jadwal-pelayanan')
+            ->monthlyOn(1, '00:01')
+            ->sendOutputTo(storage_path('logs/scheduler_history.log'))
+            ->appendOutputTo(storage_path('logs/scheduler_history.log'));
+    })
+
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('konfirmasi-jadwal-otomatis')->dailyAt('00:01');
-    })
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('insert-history-jadwal-pelayanan')->monthlyOn(1, '00:01');
     })
     ->create();

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('history_jadwal_pelayanan', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('jadwal_pelayanan_id');
-            $table->foreign('jadwal_pelayanan_id')->references('id')->on('jadwal_pelayanan');
             $table->date('date');
             $table->time('jadwal');
             $table->unsignedBigInteger('id_pemusik');
@@ -31,6 +30,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('history_jadwal_pelayanan', function (Blueprint $table) {
+            $table->dropForeign(['jadwal_pelayanan_id']);
+        });
         Schema::dropIfExists('history_jadwal_pelayanan');
     }
 };
