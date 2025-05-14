@@ -5,7 +5,7 @@
     <title>Laporan Jadwal Pelayanan</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Times New Roman", Times, serif;
             font-size: 14px;
             margin: 40px;
         }
@@ -65,14 +65,23 @@
 
         @page {
             margin: 40px;
+            size: A4;
+            margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <h2>Laporan Jadwal Pelayanan</h2>
+    <div class="header" style="text-align: center;">
+        <img src="{{ public_path('images/logo hkbp.png') }}" style="width: 120px; height: auto;">
+        <h2 style="margin: 10px;">HURIA KRISTEN BATAK PROTESTAN</h2>
+        <h3 style="margin: 0;">HKBP KAYU TINGGI RESORT KAYU TINGGI</h3>
+        <p style="margin: 0;">Jl. Cempaka I Dalam No. 65 RT.013/RW.09 Cakung Timur, Jakarta Timur 13910</p>
+        <p style="margin: 0;">Telp: 021-4609233</p>
+        <hr style="border: 1px solid #000; margin-top: 10px;">
     </div>
+
+    <h2 style="text-align: center;">Laporan Jadwal Pelayanan</h2>
 
     <table>
         <thead>

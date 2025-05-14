@@ -239,7 +239,7 @@ class KonfirmasiJadwalController extends Controller
 
     public function getLaporan(Request $request)
     {
-        $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
+        $query = HistoryJadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
 
         // Filter berdasarkan tanggal jika diberikan
         if ($request->filled('tanggal')) {
@@ -324,7 +324,7 @@ class KonfirmasiJadwalController extends Controller
 
     protected function getFilteredLaporan(Request $request)
     {
-        $query = JadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
+        $query = HistoryJadwalPelayanan::with(['pemusik', 'songLeader1', 'songLeader2']);
 
         if ($request->filled('tanggal')) {
             $tanggal = \Carbon\Carbon::parse($request->tanggal);
