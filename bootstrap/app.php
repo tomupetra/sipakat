@@ -21,7 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('app:konfirmasi-jadwal-otomatis')
-            ->dailyAt('00:01')
+            // ->dailyAt('00:01')
+            ->everyFiveSeconds()
             ->sendOutputTo(storage_path('logs/scheduler_konfirmasi.log'))
             ->appendOutputTo(storage_path('logs/scheduler_konfirmasi.log'));
 

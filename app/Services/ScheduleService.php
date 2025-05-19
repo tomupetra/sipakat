@@ -13,45 +13,30 @@ class ScheduleService
 {
     public function generateSchedule()
     {
-        $sessions = ['07:00', '10:00', '18:00']; // 3 sesi per hari Minggu
-        $keyboardists = User::where('id_tugas', 1)->get();
-        $songLeaders = User::where('id_tugas', 2)->get();
+        $sessions = ['07:00', '10:00', '18:00'];
+        $keyboardists = User::with('availabilities')->where('id_tugas', 1)->get();
+        $songLeaders = User::with('availabilities')->where('id_tugas', 2)->get();
 
-        // Ambil tanggal yang tersedia hanya untuk bulan ini
         $dates = Availability::distinct('date')
             ->whereMonth('date', Carbon::now()->month)
             ->whereYear('date', Carbon::now()->year)
             ->pluck('date');
 
-        // Menyimpan riwayat penugasan pengguna untuk menghindari penugasan berturut-turut
-        $previousAssignments = [
-            'keyboardists' => [],
-            'songLeaders' => [],
-        ];
-
-        // Penyimpanan distribusi tugas untuk fitness
+        $previousAssignments = ['keyboardists' => [], 'songLeaders' => []];
         $assignmentCount = [];
 
         foreach ($dates as $date) {
-            // Cek apakah sudah ada jadwal untuk tanggal ini
-            $existingSchedules = JadwalPelayanan::where('date', $date)->exists();
-
-            if ($existingSchedules) {
-                continue; // Lewati tanggal ini jika sudah ada jadwal
+            if (JadwalPelayanan::where('date', $date)->exists()) {
+                continue;
             }
 
             $availableKeyboardists = $this->getAvailableUsers($keyboardists, $date);
             $availableSongLeaders = $this->getAvailableUsers($songLeaders, $date);
 
-            // Pastikan ada cukup keyboardist dan song leader untuk 3 sesi
             if (count($availableKeyboardists) >= 3 && count($availableSongLeaders) >= 6) {
-                // Menghitung batas waktu konfirmasi (misalnya, 3 hari sebelum tanggal pelayanan)
-                $confirmationDeadline = Carbon::parse($date)->subDays(3); // 3 hari sebelum tanggal pelayanan
-
-                // Inisialisasi jadwal untuk minggu ini dengan fitness
+                $confirmationDeadline = Carbon::parse($date)->subDays(3);
                 $schedule = $this->initializeSchedule($sessions, $availableKeyboardists, $availableSongLeaders, $previousAssignments, $date, $assignmentCount);
 
-                // Simpan jadwal ke database
                 foreach ($schedule as $session => $assignedUsers) {
                     $jadwal = JadwalPelayanan::create([
                         'date' => $date,
@@ -59,21 +44,18 @@ class ScheduleService
                         'id_pemusik' => $assignedUsers['keyboardist']->id,
                         'id_sl1' => $assignedUsers['song_leaders'][0]->id,
                         'id_sl2' => $assignedUsers['song_leaders'][1]->id,
-                        'status' => 0, // Status "Menunggu"
-                        'confirmation_deadline' => $confirmationDeadline, // Set batas waktu konfirmasi
+                        'status' => 0,
+                        'confirmation_deadline' => $confirmationDeadline,
                     ]);
 
-                    // Kirim notifikasi ke pengguna yang terlibat
                     $assignedUsers['keyboardist']->notify(new NotifikasiJadwalBaru($jadwal));
                     $assignedUsers['song_leaders'][0]->notify(new NotifikasiJadwalBaru($jadwal));
                     $assignedUsers['song_leaders'][1]->notify(new NotifikasiJadwalBaru($jadwal));
 
-                    // Update riwayat penugasan
                     $previousAssignments['keyboardists'][] = $assignedUsers['keyboardist']->id;
                     $previousAssignments['songLeaders'][] = $assignedUsers['song_leaders'][0]->id;
                     $previousAssignments['songLeaders'][] = $assignedUsers['song_leaders'][1]->id;
 
-                    // Update distribusi tugas
                     $assignmentCount[$assignedUsers['keyboardist']->id] = ($assignmentCount[$assignedUsers['keyboardist']->id] ?? 0) + 1;
                     $assignmentCount[$assignedUsers['song_leaders'][0]->id] = ($assignmentCount[$assignedUsers['song_leaders'][0]->id] ?? 0) + 1;
                     $assignmentCount[$assignedUsers['song_leaders'][1]->id] = ($assignmentCount[$assignedUsers['song_leaders'][1]->id] ?? 0) + 1;
@@ -160,7 +142,13 @@ class ScheduleService
 
         foreach ($overdueSchedules as $jadwal) {
             // Update status menjadi dikonfirmasi
-            $jadwal->update(['is_confirmed' => 1]);
+            $jadwal->update([
+                'status_pemusik' => 1,
+                'status_sl1' => 1,
+                'status_sl2' => 1,
+                'is_confirmed' => 1,
+                'is_locked' => true, // Kunci jadwal setelah semua mengonfirmasi
+            ]);
 
             // Pindahkan ke history jika diperlukan
             HistoryJadwalPelayanan::create([

@@ -2,7 +2,6 @@
 @section('title', 'Landing Page')
 
 @section('content')
-    <!-- Hero Section -->
     <section id="hero" class="hero section light-background"
         style="background-image: url('{{ asset('assets/img/insidegereja.jpg') }}'); background-size: cover; background-position: center;">
 
@@ -12,9 +11,8 @@
                     <h1 data-aos="fade-up" style="color: #000000;">HKBP Kayu Tinggi Jakarta</h1>
                     <div class="d-flex" data-aos="fade-up" data-aos-delay="200" style="padding-top: 50px;">
                         @if ($fileName)
-                            <a href="{{ asset('warta/' . $fileName) }}" class="btn-get-started" target="_blank"
-                                style="background-color: #35476e;">Lihat Warta
-                                Jemaat</a>
+                            <a href="{{ url('/warta/' . $fileName) }}" class="btn-get-started" target="_blank"
+                                style="background-color: #35476e;">Lihat Warta Jemaat</a>
                         @else
                             <p class="btn-get-started" style="background-color: #35476e;">Warta Jemaat belum tersedia.</p>
                         @endif
@@ -22,8 +20,8 @@
                 </div>
             </div>
         </div>
-
-    </section><!-- /Hero Section -->
+    </section>
+    <!-- /Hero Section -->
 
     <!-- About Section -->
     <section id="about" class="about section">

@@ -36,17 +36,24 @@
                             <td>{{ $jadwal->confirmation_deadline }}</td>
                             <td>
                                 @if (!$jadwal->is_confirmed && $jadwal->status != 2)
-                                    <form action="{{ route('user.confirm-schedule', $jadwal->id) }}" method="POST"
-                                        class="d-inline">
+                                    <button class="btn btn-success btn-sm confirm-btn"
+                                        data-id="{{ $jadwal->id }}">Konfirmasi</button>
+                                    <button class="btn btn-danger btn-sm reject-btn"
+                                        data-id="{{ $jadwal->id }}">Tolak</button>
+                                    <form id="confirmForm-{{ $jadwal->id }}"
+                                        action="{{ route('user.confirm-schedule', $jadwal->id) }}" method="POST"
+                                        class="d-none">
                                         @csrf
-                                        <button type="submit" class="btn btn-success btn-sm">Konfirmasi</button>
                                     </form>
-
-                                    <form action="{{ route('user.reject-schedule', $jadwal->id) }}" method="POST"
-                                        class="d-inline">
+                                    <form id="rejectForm-{{ $jadwal->id }}"
+                                        action="{{ route('user.reject-schedule', $jadwal->id) }}" method="POST"
+                                        class="d-none">
                                         @csrf
-                                        <button type="submit" class="btn btn-danger btn-sm">Tolak</button>
                                     </form>
+                                @else
+                                    <span class="text-muted">
+                                        {{ $jadwal->is_confirmed ? 'Anda telah menerima jadwal ini.' : 'Anda telah menolak jadwal ini.' }}
+                                    </span>
                                 @endif
                             </td>
                         </tr>
@@ -60,7 +67,8 @@
                 <h3 class="card-title">Jadwal Pelayanan</h3>
             </div>
             <div class="card-body">
-                <form action="{{ route('user.store.jadwal-pelayanan') }}" method="POST" id="jadwalForm" autocomplete="off">
+                <form action="{{ route('user.store.jadwal-pelayanan') }}" method="POST" id="jadwalForm"
+                    autocomplete="off">
                     @csrf
                     <div class="form-group">
                         <label for="availability_dates">Pilih Tanggal yang Tersedia:</label>
@@ -105,4 +113,72 @@
         </div>
 
     </div>
+
+    <!-- Modal for Confirmation -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Konfirmasi Jadwal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin mengonfirmasi jadwal ini?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" id="confirmScheduleButton">Konfirmasi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Rejection -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">Tolak Jadwal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin menolak jadwal ini?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" id="rejectScheduleButton">Tolak</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let scheduleId;
+
+            document.querySelectorAll('.confirm-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    scheduleId = this.dataset.id;
+                    var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                    confirmModal.show();
+                });
+            });
+
+            document.querySelectorAll('.reject-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    scheduleId = this.dataset.id;
+                    var rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+                    rejectModal.show();
+                });
+            });
+
+            document.getElementById('confirmScheduleButton').addEventListener('click', function() {
+                document.getElementById('confirmForm-' + scheduleId).submit();
+            });
+
+            document.getElementById('rejectScheduleButton').addEventListener('click', function() {
+                document.getElementById('rejectForm-' + scheduleId).submit();
+            });
+        });
+    </script>
 @endsection

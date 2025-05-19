@@ -95,13 +95,17 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.edit-jadwal', $jadwal->id) }}"
-                                            class="btn btn-primary btn-sm">Ganti</a>
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                         <form action="{{ route('admin.delete-jadwal', $jadwal->id) }}" method="POST"
                                             style="display:inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Apakah Anda yakin ingin menghapus jadwal ini?')">Hapus</button>
+                                                onclick="return confirm('Apakah Anda yakin ingin menghapus jadwal ini?')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>

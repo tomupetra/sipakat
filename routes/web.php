@@ -23,6 +23,22 @@ Route::get('/', function () {
 });
 Route::get('/', [LandingPageController::class, 'showLandingPage']);
 
+Route::get('/warta/{fileName}', function ($fileName) {
+    // Validasi agar hanya PDF dan tidak mengakses file selain di folder warta
+    if (!preg_match('/^[a-zA-Z0-9_\-]+\.(pdf)$/', $fileName)) {
+        abort(403);
+    }
+
+    $path = storage_path("app/public/warta/{$fileName}");
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path);
+});
+
+
 
 Route::get('/renungan', [RenunganController::class, 'showRenungan']);
 Route::get('/renungan/detail/{id}', [RenunganController::class, 'detailRenungan']);

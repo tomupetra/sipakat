@@ -28,12 +28,13 @@ class KonfirmasiJadwalOtomatis extends Command
     public function handle()
     {
         // Ambil semua jadwal yang belum dikonfirmasi dan sudah melewati deadline
-        $jadwals = JadwalPelayanan::where('is_confirmed', 0)
+        $jadwals = JadwalPelayanan::where('status_pemusik', 0)
+            ->where('status_sl1', 0)
+            ->where('status_sl2', 0)
             ->where('confirmation_deadline', '<', Carbon::now())
             ->get();
 
         foreach ($jadwals as $jadwal) {
-            // Update status konfirmasi menjadi 'Diterima' untuk semua
             $jadwal->update([
                 'status_pemusik' => 1,
                 'status_sl1' => 1,

@@ -104,9 +104,13 @@
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.edit-jadwal', $jadwal->id) }}"
-                                                class="btn btn-primary btn-sm">Ganti</a>
+                                                class="btn btn-primary btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal" data-id="{{ $jadwal->id }}">Hapus</button>
+                                                data-bs-target="#deleteModal" data-id="{{ $jadwal->id }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -169,16 +173,26 @@
                     form.action = '/admin/delete-jadwal/' + id;
                 });
 
+                var generateScheduleButton = document.getElementById('generateScheduleButton');
+
                 fetch('{{ route('admin.check-schedule-current-month') }}')
                     .then(response => response.json())
                     .then(data => {
                         if (data.exists) {
-                            document.getElementById('generateScheduleButton').addEventListener('click', function() {
+                            generateScheduleButton.addEventListener('click', function() {
                                 var myModal = new bootstrap.Modal(document.getElementById(
                                     'scheduleExistsModal'));
                                 myModal.show();
                             });
+                        } else {
+                            generateScheduleButton.addEventListener('click', function() {
+                                window.location.href =
+                                    '{{ route('admin.generate-schedule') }}';
+                            });
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching schedule data:', error);
                     });
 
                 fetch('{{ route('admin.check-next-month-schedule') }}')
