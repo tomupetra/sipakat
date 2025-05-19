@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Renungan extends Model
 {
+    use HasFactory;
     protected $table = 'renungan';
     protected $fillable = ['date', 'ayat_harian', 'bacaan_pagi', 'bacaan_malam', 'lagu_ende', 'title', 'content', 'image'];
 

@@ -83,9 +83,9 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::post('/admin/warta/upload-warta', [WartaController::class, 'uploadWarta'])->name('admin.warta.upload-warta');
     Route::delete('/admin/warta/destroy/{id}', [WartaController::class, 'destroy'])->name('admin.warta.destroy');
 
-    Route::get('/admin/galeri', [GalleryController::class, 'index']);
+    Route::get('/admin/galeri', [GalleryController::class, 'index'])->name('admin.galeri');
     Route::post('/admin/galeri/upload', [GalleryController::class, 'uploadFoto'])->name('admin.galeri.upload');
-    Route::delete('/admin/galeri/delete/{id}', [GalleryController::class, 'delete']);
+    Route::delete('/admin/galeri/delete/{id}', [GalleryController::class, 'delete'])->name('admin.galeri.delete');
 
     Route::get('/admin/kelolaakun', [AdminController::class, 'list']);
     Route::get('/admin/add', [AdminController::class, 'add']);

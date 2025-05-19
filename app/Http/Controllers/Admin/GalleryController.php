@@ -10,14 +10,9 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        return view('/gallery/index', [
+        return view('admin.galeri', [
             'images' => Gallery::all()
         ]);
-    }
-
-    public function create()
-    {
-        // return view('admin.gallery.create');
     }
 
     public function uploadFoto(Request $request)
@@ -28,7 +23,7 @@ class GalleryController extends Controller
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time().'.'.$image->extension();
+            $imageName = time() . '.' . $image->extension();
             $request->image->move(public_path('storage/images'), $imageName);
 
             Gallery::create([
@@ -44,7 +39,7 @@ class GalleryController extends Controller
         $image = Gallery::find($id);
         $image->delete();
 
-        return redirect()->route('admin/galeri')
+        return redirect()->route('admin.galeri')
             ->with('success', 'Image deleted successfully');
     }
 }
