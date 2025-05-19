@@ -117,12 +117,11 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/api/events', [JadwalController::class, 'getEvents']);
     Route::delete('/admin/ruangan/delete/{id}', [JadwalController::class, 'deleteEvent']);
     Route::put('/admin/ruangan/update/{id}', [JadwalController::class, 'update']);
-    Route::post('/admin/ruangan/{id}/resize', [JadwalController::class, 'resize']);
     Route::get('/admin/ruangan/search', [JadwalController::class, 'search']);
     Route::post('/create-schedule', [JadwalController::class, 'create'])->name('jadwal.create');
 
-    // Route::view('add-schedule', '/admin/ruangan/add');
-    // Route::post('create-schedule', [JadwalController::class, 'create']);
+    Route::get('/admin/laporan-ruangan', [JadwalController::class, 'laporanRuangan'])->name('admin.laporan-ruangan');
+    Route::get('/admin/laporan-ruangan/export-pdf', [JadwalController::class, 'exportPdf'])->name('admin.laporan-ruangan.export-pdf');
 
     // Route Validasi Peminjaman Ruangan
     Route::get('/admin/pinjam-ruangan', [ValidasiRuangController::class, 'index'])->name('admin.bookings.index');

@@ -51,6 +51,7 @@
                 <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="{{ url('admin/ruangan/jadwal') }}">Jadwal Ruangan</a>
                     <a class="nav-link" href="{{ url('admin/pinjam-ruangan') }}">Validasi Pinjam Ruangan</a>
+                    <a class="nav-link" href="{{ url('admin/laporan-ruangan') }}">Laporan Pinjam Ruangan</a>
                 </nav>
             </div>
         </div>

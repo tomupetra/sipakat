@@ -16,15 +16,6 @@ class PinjamRuanganController extends Controller
     public function list()
     {
         $rooms = Ruangan::all();
-        // $pinjamJadwals = PinjamRuangan::where('status', 'Disetujui')->get()->map(function ($booking) {
-        //     return [
-        //         'title' => $booking->kegiatan,
-        //         'start' => $booking->start_time,
-        //         'end' => $booking->end_time,
-        //         'description' => $booking->description,
-        //         'color' => $booking->ruangan->color,
-        //     ];
-        // });
 
         $adminJadwals = Jadwal::all()->map(function ($jadwal) {
             return [
@@ -36,7 +27,6 @@ class PinjamRuanganController extends Controller
             ];
         });
         $jadwals = $adminJadwals;
-        // $jadwals = $pinjamJadwals->merge($adminJadwals);
 
         return view('user.jadwal-ruangan', ['jadwals' => $jadwals, 'rooms' => $rooms]);
     }
