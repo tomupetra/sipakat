@@ -1,4 +1,4 @@
-<header id="header" class="header d-flex align-items-center sticky-top">
+<header id="header" class="header sticky-top" style="padding: 0.5rem 0;">
     <div class="container position-relative d-flex align-items-center justify-content-between">
 
         <a href="/" class="logo d-flex align-items-center me-auto me-xl-0">

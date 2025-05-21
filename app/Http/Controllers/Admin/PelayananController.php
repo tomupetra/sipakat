@@ -19,6 +19,7 @@ class PelayananController extends Controller
     public function __construct(ScheduleService $scheduleService)
     {
         $this->scheduleService = $scheduleService;
+        set_time_limit(120); // Set max execution time to 120 seconds
     }
 
     // Metode untuk membuat jadwal

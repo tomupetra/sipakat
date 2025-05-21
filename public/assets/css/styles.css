@@ -10954,6 +10954,7 @@ body {
 .nav .nav-link .sb-nav-link-icon,
 .sb-sidenav-menu .nav-link .sb-nav-link-icon {
   margin-right: 0.5rem;
+  color: #fff;
 }
 
 .sb-topnav {
@@ -10977,9 +10978,11 @@ body {
   flex-direction: column;
   height: 100%;
   flex-wrap: nowrap;
+  font-color: #fff;
 }
 .sb-sidenav .sb-sidenav-menu {
   flex-grow: 1;
+  font-color: #fff;
 }
 .sb-sidenav .sb-sidenav-menu .nav {
   flex-direction: column;
@@ -10990,6 +10993,7 @@ body {
   font-size: 0.75rem;
   font-weight: bold;
   text-transform: uppercase;
+  color: #fff;
 }
 .sb-sidenav .sb-sidenav-menu .nav .nav-link {
   display: flex;
@@ -10997,6 +11001,7 @@ body {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
   position: relative;
+  color: #fff;
 }
 .sb-sidenav .sb-sidenav-menu .nav .nav-link .sb-nav-link-icon {
   font-size: 0.9rem;
