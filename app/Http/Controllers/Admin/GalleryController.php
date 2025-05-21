@@ -10,7 +10,7 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        return view('admin.galeri', [
+        return view('gallery.index', [
             'images' => Gallery::all()
         ]);
     }

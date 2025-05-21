@@ -6,8 +6,8 @@
                 <i class="bi bi-geo-alt icon"></i>
                 <div class="address">
                     <h4>Alamat</h4>
-                    <p>Jl. Cempaka Dalam</p>
-                    <p>Cakung, Jakarta Timur</p>
+                    <p>Jl. Cempaka 1 Dalam No. 65 RT.13/RW.9</p>
+                    <p>Cakung, Jakarta Timur, 13910</p>
                     <p></p>
                 </div>
 
@@ -18,8 +18,8 @@
                 <div>
                     <h4>Contact</h4>
                     <p>
-                        <strong>Phone:</strong> <span>+1 5589 55488 55</span><br>
-                        <strong>Email:</strong> <span>info@example.com</span><br>
+                        <strong>Phone :</strong> <span>021-46828023</span><br>
+                        <strong>Tata Usaha :</strong> <span>0878 8986 1282</span><br>
                     </p>
                 </div>
             </div>
@@ -37,16 +37,22 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
-                <h4>Follow Us</h4>
-                <div class="social-links d-flex">
-                    <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+            <div class="col-lg-3 col-md-6 d-flex">
+                <i class="bi bi-map icon"></i>
+                <div>
+                    <h4>Lokasi Kami</h4>
+                    <div class="d-flex justify-content-center">
+                        <div class="rounded shadow-sm overflow-hidden"
+                            style="width: 220px; height: 220px; max-width:100%;">
+                            <iframe
+                                src="https://www.google.com/maps?q=HKBP+Kayu+Tinggi,+Jl.+Cempaka+Dalam,+Cakung,+Jakarta+Timur&hl=id&ie=UTF8&t=&z=16&iwloc=B&output=embed"
+                                width="100%" height="100%" style="border:0; min-height:220px; min-width:220px;"
+                                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 

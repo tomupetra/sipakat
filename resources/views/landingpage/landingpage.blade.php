@@ -42,7 +42,7 @@
                             wilayah Jakarta Timur, HKBP Kayu Tinggi hadir sebagai tempat pertumbuhan iman, pelayanan kasih,
                             dan persekutuan jemaat.
                             <br><br>
-                            Sejak didirikan pada tahun [tahun berdiri - isi di sini], gereja ini telah menjadi rumah rohani
+                            Sejak didirikan pada tahun 1980, gereja ini telah menjadi rumah rohani
                             bagi banyak orang dari berbagai latar belakang, khususnya warga Batak di perantauan. Kami
                             mengutamakan pelayanan berbasis kasih, pengajaran Alkitab yang mendalam, serta kegiatan-kegiatan
                             yang mempererat komunitas dalam kasih Kristus.
@@ -111,7 +111,7 @@
                                 style="width: 70%; display: block; margin: 0 auto;">
                         </div>
                         <div class="member-info text-center">
-                            <h4>Pdt. Hotlan Nahulae, M. Th</h4>
+                            <h3>Pdt. Hotlan Nahulae, M. Th</h3>
                             <span>Pendeta Ressort</span>
                         </div>
                     </div>
@@ -124,7 +124,7 @@
                                 style="width: 70%; display: block; margin: 0 auto;">
                         </div>
                         <div class="member-info text-center">
-                            <h4>Pdt. Sampe Waruwu, S. Th</h4>
+                            <h3>Pdt. Sampe Waruwu, S. Th</h3>
                             <span>Pendeta Fungsional</span>
                         </div>
                     </div>
@@ -144,6 +144,27 @@
             <h2>Gallery</h2>
             <p><span>Check</span> <span class="description-title">Our Gallery</span></p>
         </div><!-- End Section Title -->
+        <style>
+            /* Style for gallery image preview in swiper */
+            .gallery .swiper-slide img {
+                width: 100%;
+                height: 300px;
+                object-fit: cover;
+                object-position: center;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                background: #f8f9fa;
+                display: block;
+                margin: 0 auto;
+                max-width: 100%;
+            }
+
+            @media (max-width: 767px) {
+                .gallery .swiper-slide img {
+                    height: 200px;
+                }
+            }
+        </style>
 
         <div class="container" data-aos="fade-up" data-aos-delay="100">
             <!-- Add Navigation -->
